@@ -5,7 +5,6 @@ metadata:
 spec:
   strategy:
     jenkinsPipelineStrategy:
-      env:
       jenkinsfile: |-
         pipeline {
           agent { label "maven" }
@@ -13,111 +12,106 @@ spec:
             stage("Clone Source") {
               steps {
                 checkout([$class: 'GitSCM',
-                            branches: [[name: '*/master']],
+                            branches: [[name: '*/${BRANCH}']],
                             extensions: [
-                              [$class: 'RelativeTargetDirectory', relativeTargetDir: 'tradeapp']
+                              [$class: 'RelativeTargetDirectory', relativeTargetDir: '${WORKDIR}']
                             ],
-                            userRemoteConfigs: [[url: 'https://bitbucket.org/stevshil/tca-docker.git']]
+                            userRemoteConfigs: [[url: '${GITREPO}']]
                         ])
               }
             }
             stage("Build JAR") {
               steps {
-                dir('tradeapp') {
+                dir('${WORKDIR}') {
                   sh 'mvn -Dmaven.test.skip=true clean package'
                 }
               }
             }
             stage("Create Build For Trade Server") {
               steps {
-                dir('tradeapp') {
-                  sh 'oc new-build --strategy docker --binary --name trades || echo "Build already exists"'
-                  sh 'oc tag trades/trades:latest trades/server:latest'
+                dir('${WORKDIR}') {
+                  sh 'oc new-build --strategy docker --binary --name javaapp || echo "Build already exists"'
                 }
               }
             }
             stage("Build Trade Server Image") {
               steps {
-                dir('tradeapp') {
+                dir('${WORKDIR}') {
                   sh 'cp Dockerfile-trade-server Dockerfile'
-                  sh '(oc start-build trades --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
-                  sh 'oc tag trades:latest trades:1.0.0 # Tag latest to version number to allow deployment'
+                  sh '(oc start-build javaapp --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
+                  sh 'oc tag ${PROJECTNAME}/javaapp:latest ${PROJECTNAME}/javaapp:1.0.0' # Tag latest to version number to allow deployment
                 }
               }
             }
             stage("Create Build For Database Server") {
               steps {
-                dir('tradeapp') {
-                  sh 'oc new-build --strategy docker --binary --name mysql || echo "Build already exists"'
-                  sh 'oc tag trades/mysql:latest trades/mysql:latest'
+                dir('${WORKDIR}') {
+                  sh 'oc new-build --strategy docker --binary --name database || echo "Build already exists"'
                 }
               }
             }
             stage("Build Database Image") {
               steps {
-                dir('tradeapp') {
+                dir('${WORKDIR}') {
                   sh 'cp Dockerfile-mysql Dockerfile'
-                  sh '(oc start-build mysql --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
-                  sh 'oc tag mysql:latest mysql:1.0.0 # Tag latest to version number to allow deployment'
+                  sh '(oc start-build database --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
+                  sh 'oc tag ${PROJECTNAME}/database:latest ${PROJECTNAME}/database:1.0.0'
                 }
               }
             }
             stage("Create Build For Message Queue Server") {
               steps {
-                dir('tradeapp') {
-                  sh 'oc new-build --strategy docker --binary --name activemq || echo "Build already exists"'
-                  sh 'oc tag trades/activemq:latest trades/activemq:latest'
+                dir('${WORKDIR}') {
+                  sh 'oc new-build --strategy docker --binary --name mq || echo "Build already exists"'
                 }
               }
             }
             stage("Build Message Queue Server Image") {
               steps {
-                dir('tradeapp') {
+                dir('${WORKDIR}') {
                   sh 'cp Dockerfile-activemq Dockerfile'
-                  sh '(oc start-build activemq --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
-                  sh 'oc tag activemq:latest activemq:1.0.0 # Tag latest to version number to allow deployment'
+                  sh '(oc start-build mq --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
+                  sh 'oc tag ${PROJECTNAME}/mq:latest ${PROJECTNAME}/mq:1.0.0'
                 }
               }
             }
             stage("Create persistent storage") {
               steps {
-                dir('tradeapp') {
-                  sh '(oc get PersistentVolumeClaim | grep activemq-claim0) || oc apply -f openshift/activemq-claim0-persistentvolumeclaim.yaml'
-                  sh '(oc get PersistentVolumeClaim | grep activemq-claim1) || oc apply -f openshift/activemq-claim1-persistentvolumeclaim.yaml'
-                  sh '(oc get PersistentVolumeClaim | grep mysql-claim0) || oc apply -f openshift/mysql-claim0-persistentvolumeclaim.yaml'
+                dir('${WORKDIR}') {
+                  sh '(oc get PersistentVolumeClaim | grep mq-claim) || oc apply -f openshift/mq-persistentvolumeclaim.yaml'
+                  sh '(oc get PersistentVolumeClaim | grep database-claim) || oc apply -f openshift/database-persistentvolumeclaim.yaml'
                 }
               }
             }
             stage("Create Deployment Config") {
               steps {
-                dir('tradeapp') {
-                  sh '(oc get deploymentconfig | grep mysql) || oc apply -f openshift/mysql-deploymentconfig.yaml'
-                  sh '(oc get deploymentconfig | grep activemq) || oc apply -f openshift/activemq-deploymentconfig.yaml'
-                  sh '(oc get deploymentconfig | grep trades) || oc apply -f openshift/trades-deploymentconfig.yaml'
-                  sh 'oc expose svc/tradeapp || echo "tradeapp already exposed"'
+                dir('${WORKDIR}') {
+                  sh '(oc get deploymentconfig | grep database) || oc apply -f openshift/database-deploymentconfig.yaml'
+                  sh '(oc get deploymentconfig | grep mq) || oc apply -f openshift/mq-deploymentconfig.yaml'
+                  sh '(oc get deploymentconfig | grep javaapp) || oc apply -f openshift/javaapp-deploymentconfig.yaml'
                 }
               }
             }
             stage("Create Services and rollout deployment") {
               steps {
-                dir('tradeapp') {
-                  sh '(oc get svc | grep mysql) || oc apply -f openshift/mysql-service.yaml'
-                  sh '(oc get svc | grep activemq) || oc apply -f openshift/activemq-service.yaml'
-                  sh '(oc get svc | grep trades) || oc apply -f openshift/trades-service.yaml'
+                dir('${WORKDIR}') {
+                  sh '(oc get svc | grep database) || oc apply -f openshift/database-service.yaml'
+                  sh '(oc get svc | grep mq) || oc apply -f openshift/mq-service.yaml'
+                  sh '(oc get svc | grep javaapp) || oc apply -f openshift/javaapp-service.yaml'
                 }
               }
             }
             stage("Create Public route") {
               steps {
-                dir('tradeapp') {
-                  sh '((oc get route | grep trades) && echo "trades already exposed") || oc apply -f openshift/trades-route-dev.yaml'
-                  sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep trades`"'
+                dir('${WORKDIR}') {
+                  sh '((oc get route | grep javaapp) && echo "javaapp already exposed") || oc apply -f openshift/route.yaml'
+                  sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep javaapp`"'
                 }
               }
             }
             stage("Test environment") {
               steps {
-                dir('tradeapp') {
+                dir('${WORKDIR}') {
                   sh 'echo "You should perform tests to make sure your application works"'
                   sh 'echo "Something like a curl to a status port -  curl http://trades.dev2.conygre.com/trades/status"'
                   sh 'echo "Or http://trades.dev2.conygre.com/trades/list"'
@@ -126,14 +120,14 @@ spec:
             }
             stage("Clean up deployment") {
               steps {
-                dir('tradeapp') {
+                dir('${WORKDIR}') {
                         sh 'oc delete pods $(oc get pods | awk '$3 ~ /Completed|Error/ {print $0}' | awk '$2 ~ /0\/1/ {print $1}')'
                 }
               }
             }
             stage("Push Docker images to private Docker registry") {
               steps {
-                dir('tradeapp') {
+                dir('${WORKDIR}') {
                         sh 'echo "PS group will need to push the images"'
                 }
               }
