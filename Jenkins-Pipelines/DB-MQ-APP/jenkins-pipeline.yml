@@ -1,0 +1,146 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: pipeline
+spec:
+  strategy:
+    jenkinsPipelineStrategy:
+      env:
+      jenkinsfile: |-
+        pipeline {
+          agent { label "maven" }
+          stages {
+            stage("Clone Source") {
+              steps {
+                checkout([$class: 'GitSCM',
+                            branches: [[name: '*/master']],
+                            extensions: [
+                              [$class: 'RelativeTargetDirectory', relativeTargetDir: 'tradeapp']
+                            ],
+                            userRemoteConfigs: [[url: 'https://bitbucket.org/stevshil/tca-docker.git']]
+                        ])
+              }
+            }
+            stage("Build JAR") {
+              steps {
+                dir('tradeapp') {
+                  sh 'mvn -Dmaven.test.skip=true clean package'
+                }
+              }
+            }
+            stage("Create Build For Trade Server") {
+              steps {
+                dir('tradeapp') {
+                  sh 'oc new-build --strategy docker --binary --name trades || echo "Build already exists"'
+                  sh 'oc tag trades/trades:latest trades/server:latest'
+                }
+              }
+            }
+            stage("Build Trade Server Image") {
+              steps {
+                dir('tradeapp') {
+                  sh 'cp Dockerfile-trade-server Dockerfile'
+                  sh '(oc start-build trades --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
+                  sh 'oc tag trades:latest trades:1.0.0 # Tag latest to version number to allow deployment'
+                }
+              }
+            }
+            stage("Create Build For Database Server") {
+              steps {
+                dir('tradeapp') {
+                  sh 'oc new-build --strategy docker --binary --name mysql || echo "Build already exists"'
+                  sh 'oc tag trades/mysql:latest trades/mysql:latest'
+                }
+              }
+            }
+            stage("Build Database Image") {
+              steps {
+                dir('tradeapp') {
+                  sh 'cp Dockerfile-mysql Dockerfile'
+                  sh '(oc start-build mysql --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
+                  sh 'oc tag mysql:latest mysql:1.0.0 # Tag latest to version number to allow deployment'
+                }
+              }
+            }
+            stage("Create Build For Message Queue Server") {
+              steps {
+                dir('tradeapp') {
+                  sh 'oc new-build --strategy docker --binary --name activemq || echo "Build already exists"'
+                  sh 'oc tag trades/activemq:latest trades/activemq:latest'
+                }
+              }
+            }
+            stage("Build Message Queue Server Image") {
+              steps {
+                dir('tradeapp') {
+                  sh 'cp Dockerfile-activemq Dockerfile'
+                  sh '(oc start-build activemq --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
+                  sh 'oc tag activemq:latest activemq:1.0.0 # Tag latest to version number to allow deployment'
+                }
+              }
+            }
+            stage("Create persistent storage") {
+              steps {
+                dir('tradeapp') {
+                  sh '(oc get PersistentVolumeClaim | grep activemq-claim0) || oc apply -f openshift/activemq-claim0-persistentvolumeclaim.yaml'
+                  sh '(oc get PersistentVolumeClaim | grep activemq-claim1) || oc apply -f openshift/activemq-claim1-persistentvolumeclaim.yaml'
+                  sh '(oc get PersistentVolumeClaim | grep mysql-claim0) || oc apply -f openshift/mysql-claim0-persistentvolumeclaim.yaml'
+                }
+              }
+            }
+            stage("Create Deployment Config") {
+              steps {
+                dir('tradeapp') {
+                  sh '(oc get deploymentconfig | grep mysql) || oc apply -f openshift/mysql-deploymentconfig.yaml'
+                  sh '(oc get deploymentconfig | grep activemq) || oc apply -f openshift/activemq-deploymentconfig.yaml'
+                  sh '(oc get deploymentconfig | grep trades) || oc apply -f openshift/trades-deploymentconfig.yaml'
+                  sh 'oc expose svc/tradeapp || echo "tradeapp already exposed"'
+                }
+              }
+            }
+            stage("Create Services and rollout deployment") {
+              steps {
+                dir('tradeapp') {
+                  sh '(oc get svc | grep mysql) || oc apply -f openshift/mysql-service.yaml'
+                  sh '(oc get svc | grep activemq) || oc apply -f openshift/activemq-service.yaml'
+                  sh '(oc get svc | grep trades) || oc apply -f openshift/trades-service.yaml'
+                }
+              }
+            }
+            stage("Create Public route") {
+              steps {
+                dir('tradeapp') {
+                  sh '((oc get route | grep trades) && echo "trades already exposed") || oc apply -f openshift/trades-route-dev.yaml'
+                  sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep trades`"'
+                }
+              }
+            }
+            stage("Test environment") {
+              steps {
+                dir('tradeapp') {
+                  sh 'echo "You should perform tests to make sure your application works"'
+                  sh 'echo "Something like a curl to a status port -  curl http://trades.dev2.conygre.com/trades/status"'
+                  sh 'echo "Or http://trades.dev2.conygre.com/trades/list"'
+                }
+              }
+            }
+            stage("Clean up deployment") {
+              steps {
+                dir('tradeapp') {
+                        sh 'oc delete pods $(oc get pods | awk '$3 ~ /Completed|Error/ {print $0}' | awk '$2 ~ /0\/1/ {print $1}')'
+                }
+              }
+            }
+            stage("Push Docker images to private Docker registry") {
+              steps {
+                dir('tradeapp') {
+                        sh 'echo "PS group will need to push the images"'
+                }
+              }
+            }
+          }
+        }
+    type: JenkinsPipeline
+    triggers: {
+      pollSCM('H */2 * * 1-5')
+    }

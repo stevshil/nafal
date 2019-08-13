@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: DeploymentConfig
+metadata:
+  annotations:
+    kompose.version: 1.7.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: ${CONTAINERNAME}
+  name: ${CONTAINERNAME}
+spec:
+  replicas: ${MINIMUMPODS}
+  selector:
+    io.kompose.service: ${CONTAINERNAME}
+  strategy:
+    resources: {}
+    type: Rolling
+    rollingParams:
+      updatePeriodSeconds: 60
+      intervalSeconds: 60
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: ${CONTAINERNAME}
+    spec:
+      containers:
+      - image: '${IMAGESTREAM}'
+        name: ${CONTAINERNAME}
+        ports:
+        - containerPort: ${PORTNO}
+        resources: {}
+        volumeMounts:
+        - mountPath: ${CONTAINERVOLUME}
+          name: ${PVCLAIMNAME}
+      restartPolicy: Always
+      volumes:
+      - name: ${PVCLAIMNAME}
+        persistentVolumeClaim:
+          claimName: ${PVCLAIMNAME}
+  test: false
+  triggers:
+  - type: ConfigChange
+  - imageChangeParams:
+      automatic: true
+      containerNames:
+      - ${CONTAINERNAME}
+      from:
+        kind: ImageStreamTag
+        name: ${IMAGESTREAM}
+    type: ImageChange
+status: {}

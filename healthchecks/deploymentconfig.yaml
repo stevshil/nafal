@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: DeploymentConfig
+metadata:
+  annotations:
+    kompose.version: 1.7.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: ${CONTAINERNAME}
+  name: ${CONTAINERNAME}
+spec:
+  replicas: 1
+  selector:
+    io.kompose.service: ${CONTAINERNAME}
+  strategy:
+    resources: {}
+    type: Rolling
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: ${CONTAINERNAME}
+    spec:
+      containers:
+      - image: '${IMAGESTREAM}'
+        name: ${CONTAINERNAME}
+        ports:
+        - containerPort: ${PORTNO}
+        readinessProbe:
+          failureThreshold: ${FAILURETHRESHOLD}
+          httpGet:
+            path: ${CHKURL}
+            port: ${PORTNO}
+            scheme: ${CHKPROTOCOL}
+          initialDelaySeconds: ${INITIALDELAY}
+          periodSeconds: ${DELAYPERIOD}
+          successThreshold: ${SUCCESSTIME}
+          timeoutSeconds: ${TIMEOUT}
+        resources:
+          resources:
+            limits:
+              memory: ${MAXMEMORY}
+            requests:
+              memory: ${MINMEMORY}
+      restartPolicy: Always
+  test: false
+  triggers:
+  - type: ConfigChange
+  - imageChangeParams:
+      automatic: true
+      containerNames:
+      - ${CONTAINERNAME}
+      from:
+        kind: ImageStreamTag
+        name: ${IMAGESTREAM}
+    type: ImageChange
+status: {}
