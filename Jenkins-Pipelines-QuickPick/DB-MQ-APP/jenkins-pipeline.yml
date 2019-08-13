@@ -27,7 +27,7 @@ spec:
                 }
               }
             }
-            stage("Create Build For Trade Server") {
+            stage("Create Build For Java Spring Boot Server") {
               steps {
                 dir('${WORKDIR}') {
                   sh 'oc new-build --strategy docker --binary --name javaapp || echo "Build already exists"'
