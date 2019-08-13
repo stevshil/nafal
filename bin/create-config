@@ -1,0 +1,82 @@
+#!/usr/bin/python
+
+# Python script to build OpenShift configuration for application deployments
+# Author: Steve Shilling
+# Date: 14th August 2019
+
+import sys
+import re
+
+def mkRoute(projectName,serviceName,dnsName,portNo):
+  """
+  Function to create the route files for all public routes required by the application.
+
+  EXAMPLE
+    mkRoute("steve1","testme","hello.conygre.com",8080)
+  """
+
+  inFh=open("general-templates/route.yaml","r")
+  outFh=open("config/"+serviceName+"_"+str(portNo)+".route.yaml","w")
+
+  for line in routefh:
+    result=re.subn(r"\${PROJECTNAME}",projectName,line)
+    if result[1] == 0:
+      result=re.subn(r"\${PUBLICURL}",dnsName,line)
+      if result[1] == 0:
+        result=re.subn(r"\${PORTNO}",str(portNo),line)
+
+    if result[1] == 1:
+      outFh.write(result[0])
+    else:
+      outFh.write(line)
+
+  inFh.close()
+  outFh.close()
+
+def mkService(containerName,portNo):
+  """
+  Function to create the Service files for OpenShift
+
+  EXAMPLE:
+    mkService("javaapp",8080)
+  """
+
+  inFh=open("general-templates/service.yaml","r")
+  outFh=open("config/"+containerName+".service.yaml","w")
+
+  for line in inFh:
+    result=re.subn(r"\${CONTAINERNAME}",containerName,line)
+    if result[1] == 0:
+      result=re.subn(r"\${PORTNO}",str(portNo),line)
+
+    if result[1] == 1:
+      outFh.write(result[0])
+    else:
+      outFh.write(line)
+
+  inFh.close()
+  outFh.close()
+
+def persistentVolume(containerName,size):
+  """
+  Function to define persistent storage for pods.
+
+  EXAMPLE:
+    persistentVolume("database","80Gi")
+  """
+
+  inFh=open("general-templates/persistentvolumeclaim.yaml","r")
+  outFh=open("config/"+containerName+".persistentvolumeclaim.yaml","w")
+
+  for line in inFh:
+    result=re.subn(r"\${CONTAINERNAME}",containerName,line)
+    if result[1] == 0:
+      result=re.subn(r"\${CLAIMSIZE}",size,line)
+
+    if result[1] == 1:
+      outFh.write(result[0])
+    else:
+      outFh.write(line)
+
+  inFh.close()
+  outFh.close()
