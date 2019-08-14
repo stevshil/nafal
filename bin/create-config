@@ -7,6 +7,23 @@
 import sys
 import re
 
+def replaceLine(**props):
+  """
+  Function that looks for all the possible variables in the templates and performs replacement
+  """
+
+  theLine=props["line"]
+  for key in props:
+      searchre=re.compile(r"\${"+key+"}")
+      result=re.subn(searchre,str(props[key]),theLine)
+      if result[1] > 0:
+          result=result[0]
+          break
+      else:
+          result=theLine
+
+  return result
+
 def mkRoute(projectName,serviceName,dnsName,portNo):
   """
   Function to create the route files for all public routes required by the application.
@@ -18,17 +35,14 @@ def mkRoute(projectName,serviceName,dnsName,portNo):
   inFh=open("general-templates/route.yaml","r")
   outFh=open("config/"+serviceName+"_"+str(portNo)+".route.yaml","w")
 
-  for line in routefh:
-    result=re.subn(r"\${PROJECTNAME}",projectName,line)
-    if result[1] == 0:
-      result=re.subn(r"\${PUBLICURL}",dnsName,line)
-      if result[1] == 0:
-        result=re.subn(r"\${PORTNO}",str(portNo),line)
+  props={}
+  props["PROJECTNAME"]=projectName
+  props["PUBLICURL"]=dnsName
+  props["PORTNO"]=portNo
 
-    if result[1] == 1:
-      outFh.write(result[0])
-    else:
-      outFh.write(line)
+  for line in routefh:
+    result=replaceLine(line)
+    outFh.write(result)
 
   inFh.close()
   outFh.close()
@@ -44,15 +58,13 @@ def mkService(containerName,portNo):
   inFh=open("general-templates/service.yaml","r")
   outFh=open("config/"+containerName+".service.yaml","w")
 
-  for line in inFh:
-    result=re.subn(r"\${CONTAINERNAME}",containerName,line)
-    if result[1] == 0:
-      result=re.subn(r"\${PORTNO}",str(portNo),line)
+  props={}
+  props["CONTAINERNAME"]=containerName
+  props["PORTNO"]=portNo
 
-    if result[1] == 1:
-      outFh.write(result[0])
-    else:
-      outFh.write(line)
+  for line in inFh:
+    result=replaceLine(line)
+    outFh.write(result)
 
   inFh.close()
   outFh.close()
@@ -68,15 +80,87 @@ def persistentVolume(containerName,size):
   inFh=open("general-templates/persistentvolumeclaim.yaml","r")
   outFh=open("config/"+containerName+".persistentvolumeclaim.yaml","w")
 
-  for line in inFh:
-    result=re.subn(r"\${CONTAINERNAME}",containerName,line)
-    if result[1] == 0:
-      result=re.subn(r"\${CLAIMSIZE}",size,line)
+  props={}
+  props["CONTAINERNAME"]=containerName
+  props["CLAIMSIZE"]=size
 
-    if result[1] == 1:
-      outFh.write(result[0])
-    else:
-      outFh.write(line)
+  for line in inFh:
+    result=replaceLine(line)
+    outFh.write(result[0])
 
   inFh.close()
   outFh.close()
+
+def mkImgStream(containerName,osDisplayName,imgDesc,imgStream,imgTag):
+  """
+  Function to create Image Stream files to locate the images in OpenShift for deployments
+
+  EXAMPLE:
+    mkImgStream("javaapp","My Java Application Image","Contains the Java Application","steve1/javaapp:latest","latest")
+  """
+
+  inFh=open("general-templates/imagestream.yaml","r")
+  outFh=open("config/"+containerName+".imagestream.yaml","w")
+
+  props={}
+  props["CONTAINERNAME"]=containerName
+  props["OPENSHIFTIMAGEDISPLAYNAME"]=osDisplayName
+  props["IMAGEDESCRIPTION"]=imgDesc
+  props["IMAGESTREAM"]=imgStream
+  props["DOCKERIMAGETAG"]=imgTag
+
+  for line in inFh:
+    result=replaceLine(line)
+    outFh.write(result[0])
+
+  inFh.close()
+  outFh.close()
+
+def mkDeploymentConf(containerName,minPods,imgStream,portNo,containerVolume,pvClaim):
+  """
+  Function to create deployment configuration file for OpenShift.
+
+  EXAMPLE:
+    mkDeploymentConf("database",1,"steve1/database:latest",8080,"/var/lib/mysql","database-claim0")
+  """
+
+  inFh=open("general-templates/deploymentconfig.yaml","r")
+  outFh=open("config/"+containerName+".deploymentconfig.yaml","w")
+
+  flag=0
+  props={}
+  props["CONTAINERNAME"]=containerName
+  props["MINIMUMPODS"]=minPods
+  props["IMAGESTREAM"]=imgStream
+  props["PORTNO"]=portNo
+  props["CONTAINERVOLUME"]=containerVolume
+  props["PVCLAIMNAME"]=pvClaim
+
+  for line in inFh:
+    props["line"]=line
+
+    if pvClaim == "":
+      if re.search("\${VOLUMESTART}",line):
+        flag=1
+        continue
+
+    if re.search("\${VOLUMESTART}",line) and pvClaim != "":
+      continue
+
+    if flag==1:
+      if re.search("\${VOLUMEEND}",line):
+        flag=0
+        continue
+      else:
+        continue
+
+    if re.search("\${VOLUMEEND}",line) and pvClaim != "":
+        continue
+
+    result=replaceLine(**props)
+    outFh.write(result)
+
+  inFh.close()
+  outFh.close()
+
+mkDeploymentConf("database",1,"steve1/database:latest",8080,"/var/lib/mysql","database-claim0")

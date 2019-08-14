@@ -29,14 +29,18 @@ spec:
         ports:
         - containerPort: ${PORTNO}
         resources: {}
+${VOLUMESTART}
         volumeMounts:
         - mountPath: ${CONTAINERVOLUME}
           name: ${PVCLAIMNAME}
+${VOLUMEEND}
       restartPolicy: Always
+${VOLUMESTART}
       volumes:
       - name: ${PVCLAIMNAME}
         persistentVolumeClaim:
           claimName: ${PVCLAIMNAME}
+${VOLUMEEND}
   test: false
   triggers:
   - type: ConfigChange
