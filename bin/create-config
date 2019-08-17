@@ -6,11 +6,10 @@
 
 import sys
 import re
+questions={}
 
-def replaceLine(**props):
-  """
-  Function that looks for all the possible variables in the templates and performs replacement
-  """
+def __replaceLine(**props):
+  # Private function that looks for all the possible variables in the templates and performs replacement
 
   theLine=props["line"]
   for key in props:
@@ -41,7 +40,7 @@ def mkRoute(projectName,serviceName,dnsName,portNo):
   props["PORTNO"]=portNo
 
   for line in routefh:
-    result=replaceLine(line)
+    result=__replaceLine(line)
     outFh.write(result)
 
   inFh.close()
@@ -63,7 +62,7 @@ def mkService(containerName,portNo):
   props["PORTNO"]=portNo
 
   for line in inFh:
-    result=replaceLine(line)
+    result=__replaceLine(line)
     outFh.write(result)
 
   inFh.close()
@@ -85,7 +84,7 @@ def persistentVolume(containerName,size):
   props["CLAIMSIZE"]=size
 
   for line in inFh:
-    result=replaceLine(line)
+    result=__replaceLine(line)
     outFh.write(result[0])
 
   inFh.close()
@@ -104,13 +103,13 @@ def mkImgStream(containerName,osDisplayName,imgDesc,imgStream,imgTag):
 
   props={}
   props["CONTAINERNAME"]=containerName
-  props["OPENSHIFTIMAGEDISPLAYNAME"]=osDisplayName
-  props["IMAGEDESCRIPTION"]=imgDesc
+  props["OPENSHIFTIMAGEDISPLAYNAME"]=containerName+"Image"
+  props["IMAGEDESCRIPTION"]="Image for "+containerName
   props["IMAGESTREAM"]=imgStream
   props["DOCKERIMAGETAG"]=imgTag
 
   for line in inFh:
-    result=replaceLine(line)
+    result=__replaceLine(line)
     outFh.write(result[0])
 
   inFh.close()
@@ -157,10 +156,68 @@ def mkDeploymentConf(containerName,minPods,imgStream,portNo,containerVolume,pvCl
     if re.search("\${VOLUMEEND}",line) and pvClaim != "":
         continue
 
-    result=replaceLine(**props)
+    result=__replaceLine(**props)
     outFh.write(result)
 
   inFh.close()
   outFh.close()
 
-mkDeploymentConf("database",1,"steve1/database:latest",8080,"/var/lib/mysql","database-claim0")
+def __questions():
+    # Private function to ask questions about what you need
+    questions["PROJECTNAME"]={"Q":"What is the name of your project: "}
+    questions["NUMDCS"]={"Q":"How many containers do you need: "}
+    questions["CONTAINERNAME"]={"Q":"What is the name for this container: "}
+    questions["PORTNO"]={"Q":"What is the port number that the container service listens on (default 8080): "}
+    questions["IMAGESTREAM"]={"Q":"What is the image URL, local or repository (dockerreg.training.local:5000/proj/image): "}
+    questions["DOCKERIMAGETAG"]={"Q":"What is the version number of this image (ENTER for latest): "}
+    questions["MINIMUMPODS"]={"Q":"How many Pods must be initially started (default = 1): "}
+    questions["PUBLICURL"]={"Q":"What is the public URL for this container (ENTER for none): "}
+    questions["CONTAINERVOLUME"]={"Q":"What is the directory inside the container to share (ENTER for none): "}
+    questions["CLAIMSIZE"]={"Q":"How much persistent storage does this container need (default 100Gi): "}
+    questions["PVCLAIMNAME"]={"Q":"What is the name for this persistent storage: "}
+
+# MAIN Code starts here
+__questions()
+qorder=["CONTAINERNAME","PORTNO","IMAGESTREAM","DOCKERIMAGETAG","MINIMUMPODS","PUBLICURL","CONTAINERVOLUME","CLAIMSIZE","PVCLAIMNAME"]
+questions["PROJECTNAME"]["A"]=raw_input(questions["PROJECTNAME"]["Q"])
+questions["NUMDCS"]["A"]=input(questions["NUMDCS"]["Q"])
+
+containerCount=1
+while containerCount <= questions["NUMDCS"]["A"]:
+    for question in qorder:
+        if question == "PVCLAIMNAME" and questions["CONTAINERVOLUME"]["A"][containerCount] == "":
+            continue
+
+        if question == "CLAIMSIZE" and questions["CONTAINERVOLUME"]["A"][containerCount] == "":
+            continue
+
+        if "A" not in questions[question]:
+            questions[question]["A"]={}
+            questions[question]["A"]={containerCount: raw_input(questions[question]["Q"]) }
+        else:
+
+            questions[question]["A"][containerCount]=raw_input(questions[question]["Q"])
+
+        if question == "PORTNO":
+            if questions[question]["A"][containerCount] == "":
+                questions[question]["A"][containerCount] = 8080
+
+        if question == "DOCKERIMAGETAG":
+            if questions[question]["A"][containerCount] == "":
+                questions[question]["A"][containerCount] = "latest"
+
+        if question == "MINIMUMPODS":
+            if questions[question]["A"][containerCount] == "":
+                questions[question]["A"][containerCount] = 1
+
+        try:
+            if questions["CONTAINERVOLUME"]["A"][containerCount] != "":
+                if question == "CLAIMSIZE":
+                    if questions[question]["A"][containerCount] == "":
+                        questions[question]["A"][containerCount] = "100Gi"
+        except:
+            pass
+
+    containerCount+=1
+
+# print(str(questions))
