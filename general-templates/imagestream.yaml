@@ -3,22 +3,22 @@ kind: ImageStream
 metadata:
   creationTimestamp: null
   labels:
-    io.kompose.service: ${CONTAINERNAME}
-  name: ${CONTAINERNAME}
+    io.kompose.service: CONTAINERNAME
+  name: CONTAINERNAME
 spec:
   lookupPolicy:
     local: false
   tags:
   - annotations:
-      openshift.io/display-name: ${OPENSHIFTIMAGEDISPLAYNAME}
+      openshift.io/display-name: CONTAIENRNAME-image
       description: >-
-        ${IMAGEDESCRIPTION}
+        Image to launch CONTAINERNAME
     from:
       kind: DockerImage
-      name: ${IMAGESTREAM}
+      name: IMAGESTREAM
     generation: null
     importPolicy:
       insecure: true
-    name: ${DOCKERIMAGETAG}
+    name: DOCKERIMAGETAG
 status:
   dockerImageRepository: ""

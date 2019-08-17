@@ -5,7 +5,10 @@
 # Date: 14th August 2019
 
 import sys
+import os
 import re
+import pickle
+
 questions={}
 
 def __replaceLine(**props):
@@ -176,9 +179,44 @@ def __questions():
     questions["CLAIMSIZE"]={"Q":"How much persistent storage does this container need (default 100Gi): "}
     questions["PVCLAIMNAME"]={"Q":"What is the name for this persistent storage: "}
 
+def __inputChecks(fieldName,value):
+    # Input checks and defaults
+    result=""
+
+    if value != "":
+        return value
+
+    if fieldName == "PORTNO" and value == "":
+        result = 8080
+
+    if fieldName == "DOCKERIMAGETAG" and value == "":
+        result = "latest"
+
+    if fieldName == "MINIMUMPODS" and value == "":
+        result = 1
+
+    try:
+        if fieldName == "CLAIMSIZE" and value == "" and questions["CONTAINERVOLUME"]["A"][containerCount] != "":
+            result = "100Gi"
+    except:
+        pass
+
+    return result
+
 # MAIN Code starts here
 __questions()
+# Set the questions to ask
 qorder=["CONTAINERNAME","PORTNO","IMAGESTREAM","DOCKERIMAGETAG","MINIMUMPODS","PUBLICURL","CONTAINERVOLUME","CLAIMSIZE","PVCLAIMNAME"]
+
+# Open a file to save the questions just in case theres an error
+#if os.path.exists("/tmp/ostsave.dat"):
+#    qfh=open("/tmp/ostsave.dat","rb")
+#    questions=pickle.load(qfh)
+
+# Save the answers in a file
+qfh=open("/tmp/ostsave.dat","wb",0)
+
+# Ask the questions
 questions["PROJECTNAME"]["A"]=raw_input(questions["PROJECTNAME"]["Q"])
 questions["NUMDCS"]["A"]=input(questions["NUMDCS"]["Q"])
 
@@ -195,29 +233,35 @@ while containerCount <= questions["NUMDCS"]["A"]:
             questions[question]["A"]={}
             questions[question]["A"]={containerCount: raw_input(questions[question]["Q"]) }
         else:
-
             questions[question]["A"][containerCount]=raw_input(questions[question]["Q"])
 
-        if question == "PORTNO":
-            if questions[question]["A"][containerCount] == "":
-                questions[question]["A"][containerCount] = 8080
+        questions[question]["A"][containerCount]=__inputChecks(question,questions[question]["A"][containerCount])
 
-        if question == "DOCKERIMAGETAG":
-            if questions[question]["A"][containerCount] == "":
-                questions[question]["A"][containerCount] = "latest"
-
-        if question == "MINIMUMPODS":
-            if questions[question]["A"][containerCount] == "":
-                questions[question]["A"][containerCount] = 1
-
-        try:
-            if questions["CONTAINERVOLUME"]["A"][containerCount] != "":
-                if question == "CLAIMSIZE":
-                    if questions[question]["A"][containerCount] == "":
-                        questions[question]["A"][containerCount] = "100Gi"
-        except:
-            pass
+        pickle.dump(questions, qfh, pickle.HIGHEST_PROTOCOL)
 
     containerCount+=1
 
-# print(str(questions))
+# DEBUG MESSAGES
+print(str(questions))
+print "Number of deployment configs: "+str(questions["NUMDCS"]["A"])
+qfh.close()
+
+# Create the files in the config directory
+tcount=1
+if not os.path.exists("config/"+questions["PROJECTNAME"]["A"]):
+    os.mkdir("config/"+questions["PROJECTNAME"]["A"])
+while tcount <= questions["NUMDCS"]["A"]:
+    ifh=open("general-templates/imagestream.yaml","r")
+    ofh=open("config/"+questions["PROJECTNAME"]["A"]+"/"+questions["CONTAINERNAME"]["A"][tcount],"w")
+    for line in ifh:
+        for key in qorder:
+            try:
+                x=re.search(key,line)
+                if x:
+                    line=re.sub(key,str(questions[key]["A"][tcount]),line)
+            except:
+                pass
+        ofh.write(line)
+    ifh.close()
+    ofh.close()
+    tcount+=1
