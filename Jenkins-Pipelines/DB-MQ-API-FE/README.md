@@ -6,6 +6,12 @@ This pipeline will build a 4 tier project consisting of;
 * API Pod
 * Angular Frontend Pod
 
+It is recommended that you have separate GIT repositories for;
+* Database and Message queue
+* API
+* Frontend
+* End-to-end tests
+
 The build is parameterised to make the template repeatable and reusable.  The parameters are;
 * PROJECTNAME
   * This is the name of your project in OpenShift, must be unique
@@ -33,6 +39,9 @@ The build is parameterised to make the template repeatable and reusable.  The pa
   * The version of Angular required to compile the web site (default = 7.0.3)
 * DOCKERREG
   * The URL of the private docker registry (default = dockerreg.conygre.com:5000)
+* BUILDAUX
+  * Set to **true** if you want to build the database and message queue pods (default = false)
+  * By default the step will be skipped
 
 # GIT repository layout
 The Jenkins pipeline makes the following assumptions about your GIT repository.

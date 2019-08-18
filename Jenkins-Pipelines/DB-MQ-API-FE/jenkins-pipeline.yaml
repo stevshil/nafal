@@ -32,6 +32,8 @@ spec:
           value: 7.0.3
         - name: DOCKERREG
           value: dockerreg.conygre.com:5000
+        - name: BUILDAUX
+          value: false
       jenkinsfile: |-
         pipeline {
           agent none
@@ -166,6 +168,9 @@ spec:
             }
             stage("Build Database and Message Queue Servers") {
               agent (label 'maven')
+              when {
+                environment name: 'BUILDAUX', value: true
+              }
               stages {
                 stage("Clone Source") {
                   steps {
