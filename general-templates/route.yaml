@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Route
 metadata:
-  name: ${PROJECTNAME}
+  name: PROJECTNAME
 spec:
-  host: ${PUBLICURL}
+  host: PUBLICURL
   port:
-    targetPort: '${PORTNO}'
+    targetPort: 'PORTNO'
   to:
     kind: Service
-    name: ${PROJECTNAME}
+    name: PROJECTNAME

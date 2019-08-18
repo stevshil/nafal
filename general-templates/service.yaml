@@ -5,14 +5,14 @@ metadata:
     kompose.version: 1.7.0 (HEAD)
   creationTimestamp: null
   labels:
-    io.kompose.service: ${CONTAINERNAME}
-  name: ${CONTAINERNAME}
+    io.kompose.service: CONTAINERNAME
+  name: CONTAINERNAME
 spec:
   ports:
-  - name: "${PORTNO}"
-    port: ${PORTNO}
-    targetPort: ${PORTNO}
+  - name: "PORTNO"
+    port: PORTNO
+    targetPort: PORTNO
   selector:
-    io.kompose.service: ${CONTAINERNAME}
+    io.kompose.service: CONTAINERNAME
 status:
   loadBalancer: {}

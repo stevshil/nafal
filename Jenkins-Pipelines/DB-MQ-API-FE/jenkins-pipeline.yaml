@@ -1,0 +1,275 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: pipeline
+spec:
+  strategy:
+    jenkinsPipelineStrategy:
+      env:
+        - name: PROJECTNAME
+          description: Name of the project in OpenShift
+        - name: GITREPOFE
+        - name: GITREPOAPI
+        - name: GITREPOAUX
+        - name: GITREPOTEST
+        - name: APIVERSION
+          value: 0.0.1
+        - name: DBVERSION
+          value: 0.0.1
+        - name: MQVERSION
+          value: 0.0.1
+        - name: FRONTENDVERSION
+          value: 0.0.1
+        - name: BRANCHFE
+          value: master
+        - name: BRANCHAPI
+          value: master
+        - name: BRANCHAUX
+          value: master
+        - name: BRANCHTEST
+          value: master
+        - name: ANGULARCLIVERSION
+          value: 7.0.3
+        - name: DOCKERREG
+          value: dockerreg.conygre.com:5000
+      jenkinsfile: |-
+        pipeline {
+          agent none
+          stages {
+            stage ("Build Front End") {
+              agent {label 'nodejs'}
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHFE}"]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'frontend']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOFE}"]]
+                            ])
+                  }
+                }
+                stage("Install Angular") {
+                  steps {
+                    dir('frontend') {
+                      sh "npm install -g @angular/cli@${ANGULARCLIVERSION}"
+                    }
+                  }
+                }
+                stage("Angular build") {
+                  steps {
+                    dir('frontend') {
+                      sh 'npm install'
+                      sh 'ng build --prod=true'
+                    }
+                  }
+                }
+                stage("Create Build For Frontend Server") {
+                  steps {
+                    dir('frontend') {
+                      sh 'oc new-build --strategy docker --binary --name frontend --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                    }
+                  }
+                }
+                stage("Build Frontend Image") {
+                  steps {
+                    dir('frontend') {
+                      sh 'oc start-build frontend --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1')
+                      sh "oc tag ${PROJECTNAME}/frontend:latest ${PROJECTNAME}/frontend:${FRONTENDVERSION}" # Tag latest to version number to allow deployment
+                    }
+                  }
+                }
+                stage("Create or Update Frontend Deployment Config") {
+                  steps {
+                  dir('frontend') {
+                      sh 'oc apply -f openshift/frontend-deploymentconfig.yaml'
+                    }
+                  }
+                }
+                stage("Create or updated Service and rollout deployment") {
+                  steps {
+                    dir('frontend') {
+                      sh 'oc apply -f openshift/frontend-service.yaml'
+                    }
+                  }
+                }
+                stage("Create Public route") {
+                  steps {
+                    dir('frontend') {
+                      sh '((oc get route | grep ${PROJECTNAME}-public) && echo "${PROJECTNAME}-public already exposed") || oc apply -f openshift/frontend-route.yaml'
+                      sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}-public`"'
+                    }
+                  }
+                }
+              }
+            }
+            stage("Build API") {
+              agent {label 'maven'}
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHAPI}""]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'api']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOAPI}"]]
+                            ])
+                  }
+                }
+                stage("Build JAR") {
+                  steps {
+                    dir('api') {
+                      sh 'mvn -Dmaven.test.skip=true clean package'
+                    }
+                  }
+                }
+                stage("Create Build For Java Spring Boot Server") {
+                  steps {
+                    dir('api') {
+                      sh 'oc new-build --strategy docker --binary --name api --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                    }
+                  }
+                }
+                stage("Build API Server Image") {
+                  steps {
+                    dir('api') {
+                      sh 'oc start-build api --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1)'
+                      sh "oc tag ${PROJECTNAME}/api:latest ${PROJECTNAME}/api:${APIVERSION}" # Tag latest to version number to allow deployment
+                    }
+                  }
+                }
+                stage("Create or Update API Deployment Config") {
+                  steps {
+                  dir('api') {
+                      sh 'oc apply -f openshift/api-deploymentconfig.yaml'
+                    }
+                  }
+                }
+                stage("Create or update Service and rollout deployment") {
+                  steps {
+                    dir('api') {
+                      sh 'oc apply -f openshift/api-service.yaml'
+                    }
+                  }
+                }
+                stage("Create API route") {
+                  steps {
+                    dir('api') {
+                      sh '((oc get route | grep ${PROJECTNAME}-api) && echo "${PROJECTNAME}-api already exposed") || oc apply -f openshift/api-route.yaml'
+                      sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}-api`"'
+                    }
+                  }
+                }
+              }
+            }
+            stage("Build Database and Message Queue Servers") {
+              agent (label 'maven')
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHAUX}""]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'dbmq']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOAUX}"]]
+                            ])
+                  }
+                }
+                stage("Create Build For Database Server") {
+                  steps {
+                    dir('dbmq/db') {
+                      sh 'oc new-build --strategy docker --binary --name database --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                    }
+                  }
+                }
+                stage("Build Database Image") {
+                  steps {
+                    dir('dbmq/db') {
+                      sh '(oc start-build database --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
+                      sh "oc tag ${PROJECTNAME}/database:latest ${PROJECTNAME}/database:${DBVERSION}"
+                    }
+                  }
+                }
+                stage("Create Build For Message Queue Server") {
+                  steps {
+                    dir('dbmq/mq') {
+                      sh 'oc new-build --strategy docker --binary --name mq --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                    }
+                  }
+                }
+                stage("Build Message Queue Server Image") {
+                  steps {
+                    dir('dbmq/mq') {
+                      sh 'cp Dockerfile-activemq Dockerfile'
+                      sh '(oc start-build mq --from-dir . --follow --wait=true && rm Dockerfile) || rm Dockerfile'
+                      sh "oc tag ${PROJECTNAME}/mq:latest ${PROJECTNAME}/mq:${MQVERSION}"
+                    }
+                  }
+                }
+                stage("Create persistent storage") {
+                  steps {
+                    dir('dbmq') {
+                      sh '(oc get PersistentVolumeClaim | grep mq-claim) || oc apply -f openshift/mq-persistentvolumeclaim.yaml'
+                      sh '(oc get PersistentVolumeClaim | grep database-claim) || oc apply -f openshift/database-persistentvolumeclaim.yaml'
+                    }
+                  }
+                }
+                stage("Create Deployment Config") {
+                  steps {
+                  dir('dbmq') {
+                      sh 'oc apply -f openshift/database-deploymentconfig.yaml'
+                      sh 'oc apply -f openshift/mq-deploymentconfig.yaml'
+                    }
+                  }
+                }
+                stage("Create Services and rollout deployment") {
+                  steps {
+                    dir('dbmq') {
+                      sh 'oc apply -f openshift/database-service.yaml'
+                      sh 'oc apply -f openshift/mq-service.yaml'
+                    }
+                  }
+                }
+              }
+            }
+            stage("Test Application") {
+              agent (label 'maven')
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHTEST}""]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'tests']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOTEST}"]]
+                            ])
+                  }
+                }
+                stage("Test environment") {
+                  steps {
+                    dir('tests') {
+                      sh 'echo "You should perform tests to make sure your application works"'
+                      sh 'echo "Something like a curl to a status port -  curl http://trades.dev2.conygre.com/trades/status"'
+                      sh 'echo "Or http://trades.dev2.conygre.com/trades/list"'
+                    }
+                  }
+                }
+                stage("Clean up deployment") {
+                  steps {
+                    dir('tests') {
+                            sh 'oc delete pods $(oc get pods | awk '$3 ~ /Completed|Error/ {print $0}' | awk '$2 ~ /0\/1/ {print $1}')'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+    type: JenkinsPipeline
+    triggers: {
+      pollSCM('H */2 * * 1-5')
+    }

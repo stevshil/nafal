@@ -3,12 +3,12 @@ kind: PersistentVolumeClaim
 metadata:
   creationTimestamp: null
   labels:
-    io.kompose.service: ${CONTAINERNAME}-claim0
-  name: ${CONTAINERNAME}-claim0
+    io.kompose.service: CONTAINERNAME-claim0
+  name: CONTAINERNAME-claim0
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      storage: ${CLAIMSIZE}
+      storage: CLAIMSIZE
 status: {}

@@ -5,12 +5,12 @@ metadata:
     kompose.version: 1.7.0 (HEAD)
   creationTimestamp: null
   labels:
-    io.kompose.service: ${CONTAINERNAME}
-  name: ${CONTAINERNAME}
+    io.kompose.service: CONTAINERNAME
+  name: CONTAINERNAME
 spec:
-  replicas: ${MINIMUMPODS}
+  replicas: MINIMUMPODS
   selector:
-    io.kompose.service: ${CONTAINERNAME}
+    io.kompose.service: CONTAINERNAME
   strategy:
     resources: {}
     type: Rolling
@@ -21,25 +21,25 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        io.kompose.service: ${CONTAINERNAME}
+        io.kompose.service: CONTAINERNAME
     spec:
       containers:
-      - image: '${IMAGESTREAM}'
-        name: ${CONTAINERNAME}
+      - image: 'IMAGESTREAM'
+        name: CONTAINERNAME
         ports:
-        - containerPort: ${PORTNO}
+        - containerPort: PORTNO
         resources: {}
 ${VOLUMESTART}
         volumeMounts:
-        - mountPath: ${CONTAINERVOLUME}
-          name: ${PVCLAIMNAME}
+        - mountPath: CONTAINERVOLUME
+          name: PVCLAIMNAME
 ${VOLUMEEND}
       restartPolicy: Always
 ${VOLUMESTART}
       volumes:
-      - name: ${PVCLAIMNAME}
+      - name: PVCLAIMNAME
         persistentVolumeClaim:
-          claimName: ${PVCLAIMNAME}
+          claimName: PVCLAIMNAME
 ${VOLUMEEND}
   test: false
   triggers:
@@ -47,9 +47,9 @@ ${VOLUMEEND}
   - imageChangeParams:
       automatic: true
       containerNames:
-      - ${CONTAINERNAME}
+      - CONTAINERNAME
       from:
         kind: ImageStreamTag
-        name: ${IMAGESTREAM}
+        name: IMAGESTREAM
     type: ImageChange
 status: {}

@@ -171,7 +171,7 @@ def __questions():
     questions["NUMDCS"]={"Q":"How many containers do you need: "}
     questions["CONTAINERNAME"]={"Q":"What is the name for this container: "}
     questions["PORTNO"]={"Q":"What is the port number that the container service listens on (default 8080): "}
-    questions["IMAGESTREAM"]={"Q":"What is the image URL, local or repository (dockerreg.training.local:5000/proj/image): "}
+    questions["DOCKERREG"]={"Q":"What is the URL of your private docker registry (dockerreg.training.local:5000): "}
     questions["DOCKERIMAGETAG"]={"Q":"What is the version number of this image (ENTER for latest): "}
     questions["MINIMUMPODS"]={"Q":"How many Pods must be initially started (default = 1): "}
     questions["PUBLICURL"]={"Q":"What is the public URL for this container (ENTER for none): "}
@@ -206,7 +206,9 @@ def __inputChecks(fieldName,value):
 # MAIN Code starts here
 __questions()
 # Set the questions to ask
-qorder=["CONTAINERNAME","PORTNO","IMAGESTREAM","DOCKERIMAGETAG","MINIMUMPODS","PUBLICURL","CONTAINERVOLUME","CLAIMSIZE","PVCLAIMNAME"]
+qorder=["CONTAINERNAME","PORTNO","DOCKERIMAGETAG","MINIMUMPODS","PUBLICURL","CONTAINERVOLUME","CLAIMSIZE","PVCLAIMNAME"]
+allKeys=["PROJECTNAME","NUMDCS","DOCKERREG","IMAGESTREAM","CONTAINERNAME","PORTNO","DOCKERIMAGETAG","MINIMUMPODS","PUBLICURL","CONTAINERVOLUME","CLAIMSIZE","PVCLAIMNAME"]
+templates=["deploymentconfig.yaml","imagestream.yaml","service.yaml","route.yaml","persistenetvolumeclaim.yaml"]
 
 # Open a file to save the questions just in case theres an error
 #if os.path.exists("/tmp/ostsave.dat"):
@@ -216,9 +218,11 @@ qorder=["CONTAINERNAME","PORTNO","IMAGESTREAM","DOCKERIMAGETAG","MINIMUMPODS","P
 # Save the answers in a file
 qfh=open("/tmp/ostsave.dat","wb",0)
 
-# Ask the questions
+# Ask the questions, for those items that are project wide
 questions["PROJECTNAME"]["A"]=raw_input(questions["PROJECTNAME"]["Q"])
 questions["NUMDCS"]["A"]=input(questions["NUMDCS"]["Q"])
+questions["DOCKERREG"]["A"]=raw_input(questions["DOCKERREG"]["Q"])
+# questions["IMAGESTREAM"]["A"] is missing as it will have a containerCount
 
 containerCount=1
 while containerCount <= questions["NUMDCS"]["A"]:
@@ -239,6 +243,10 @@ while containerCount <= questions["NUMDCS"]["A"]:
 
         pickle.dump(questions, qfh, pickle.HIGHEST_PROTOCOL)
 
+    if questions["DOCKERREG"]["A"] != "":
+        questions["IMAGESTREAM"]={"A": {containerCount: questions["DOCKERREG"]["A"]+"/"+questions["PROJECTNAME"]["A"]+"/"+questions["CONTAINERNAME"]["A"][containerCount]+":"+questions["DOCKERIMAGETAG"]["A"][containerCount]}}
+    else:
+        questions["IMAGESTREAM"]={"A": {containerCount: questions["PROJECTNAME"]["A"]+"/"+questions["CONTAINERNAME"]["A"][containerCount]+":"+questions["DOCKERIMAGETAG"]["A"][containerCount]}}
     containerCount+=1
 
 # DEBUG MESSAGES
@@ -247,21 +255,26 @@ print "Number of deployment configs: "+str(questions["NUMDCS"]["A"])
 qfh.close()
 
 # Create the files in the config directory
-tcount=1
 if not os.path.exists("config/"+questions["PROJECTNAME"]["A"]):
     os.mkdir("config/"+questions["PROJECTNAME"]["A"])
-while tcount <= questions["NUMDCS"]["A"]:
-    ifh=open("general-templates/imagestream.yaml","r")
-    ofh=open("config/"+questions["PROJECTNAME"]["A"]+"/"+questions["CONTAINERNAME"]["A"][tcount],"w")
-    for line in ifh:
-        for key in qorder:
-            try:
-                x=re.search(key,line)
-                if x:
-                    line=re.sub(key,str(questions[key]["A"][tcount]),line)
-            except:
-                pass
-        ofh.write(line)
-    ifh.close()
-    ofh.close()
-    tcount+=1
+
+for filename in templates:
+    tcount=1
+    while tcount <= questions["NUMDCS"]["A"]:
+        ifh=open("general-templates/"+filename,"r")
+        ofh=open("config/"+questions["PROJECTNAME"]["A"]+"/"+questions["CONTAINERNAME"]["A"][tcount]+"-"+filename,"w")
+        for line in ifh:
+            for key in allKeys:
+                try:
+                    x=re.search(key,line)
+                    if x:
+                        if tcount in questions[key]["A"]:
+                            line=re.sub(key,str(questions[key]["A"][tcount]),line)
+                        else:
+                            line=re.sub(key,str(questions[key]["A"]),line)
+                except:
+                    pass
+            ofh.write(line)
+        ifh.close()
+        ofh.close()
+        tcount+=1

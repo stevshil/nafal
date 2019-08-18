@@ -10,7 +10,7 @@ spec:
     local: false
   tags:
   - annotations:
-      openshift.io/display-name: CONTAIENRNAME-image
+      openshift.io/display-name: CONTAINERNAME-image
       description: >-
         Image to launch CONTAINERNAME
     from:

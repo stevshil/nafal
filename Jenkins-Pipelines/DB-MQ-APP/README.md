@@ -12,4 +12,4 @@ The jenkins-pipeline-parameter.yml has the ability to change the image stream Ta
 oc start-build pipeline -e VERSION=1.0.0
 ```
 
-The jenkins.pipeline.yml uses a default tag version of 1.0.0 that has to be changed in the code of the Git repo.
+The jenkins-pipeline.yml uses a default tag version of 1.0.0 that has to be changed in the code of the Git repo.
