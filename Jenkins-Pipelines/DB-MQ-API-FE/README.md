@@ -7,6 +7,7 @@ This pipeline will build a 4 tier project consisting of;
 * Angular Frontend Pod
 
 It is recommended that you have separate GIT repositories for;
+* Environment
 * Database and Message queue
 * API
 * Frontend
@@ -50,6 +51,8 @@ The build is parameterised to make the template repeatable and reusable.  The pa
   * Set to the URL that contains the health check for your web site container (default = /)
 * APICHKURL
   * Set to the URL that contains the health check page for your API container (default = /api)
+
+All the above variable are passed to the Jenkins job using the **-e** option to the ```oc start-build```.
 
 # GIT repository layout
 The Jenkins pipeline makes the following assumptions about your GIT repository.
@@ -109,3 +112,15 @@ openshift-config
 ```
 
 The contents of these files should match exactly what is in the ones found in the https://bitbucket.org/stevshil/openshift-templates.git repository under the **openshift-config** directory.
+
+## Creating the pipeline
+
+```
+oc create -f jenkins-pipeline.yaml
+```
+
+## Launching the pipeline
+
+```
+oc start-build pipeline -e VERSION=1.0.0 -e otherVariable=...
+```

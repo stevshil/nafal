@@ -69,6 +69,7 @@ All files are to be in the root of the git repository pointed to by GITREPOTEST
 The Jenkins templates require the use of either the default GITREPOENV or if you choose to use your own GITREPOENV make sure that your git repository is laid out as follows;
 
 ```
+openshift-config
 |-API
 | |-deploymentConfig.yaml
 | |-imagestream.yaml
