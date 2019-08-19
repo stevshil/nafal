@@ -1,0 +1,250 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: pipeline
+spec:
+  strategy:
+    jenkinsPipelineStrategy:
+      env:
+        - name: PROJECTNAME
+          description: Name of the project in OpenShift
+        - name: DOMAINNAME
+          value: dev1.conygre.com
+        - name: GITREPOENV
+          value: https://bitbucket.org/stevshil/openshift-templates.git
+        - name: GITREPOAPI
+        - name: GITREPODB
+        - name: GITREPOTEST
+          value: "false"
+        - name: APIVERSION
+          value: 0.0.1
+        - name: DBVERSION
+          value: 0.0.1
+        - name: BRANCHENV
+          value: master
+        - name: BRANCHAPI
+          value: master
+        - name: BRANCHDB
+          value: master
+        - name: BRANCHTEST
+          value: master
+        - name: DOCKERREG
+          value: dockerreg.conygre.com:5000
+        - name: BUILDDB
+          value: false
+        - name: APICHKURL
+          value: /
+      jenkinsfile: |-
+        pipeline {
+          agent none
+          stages {
+            stage ("Create OpenShift Environment") {
+              agent {label 'maven'}
+              when {
+                environment name: 'BUILDDB', value: true
+              }
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHENV}"]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'environment']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOENV}"]]
+                            ])
+                  }
+                }
+                stage("Create API image stream") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \""$(cat openshift-config/api/imagestream.yaml)"\" >imagestream2.yaml'
+                      sh 'mv imagestream2.yaml openshift-config/api/imagestream.yaml'
+                      sh 'oc apply -f openshift-config/api/imagestream.yaml'
+                    }
+                  }
+                }
+                stage("Create or Update API Deployment Config") {
+                  steps {
+                  dir('environment') {
+                      sh 'eval echo \""$(cat openshift-config/api/deploymentConfig.yaml)"\" >deploymentConfig2.yaml'
+                      sh 'mv deploymentConfig.yaml openshift-config/api/deploymentConfig.yaml'
+                      sh 'oc apply -f openshift-config/api/deploymentConfig.yaml'
+                      sh 'oc apply -f service-templates/api/deploymentConfig.yaml'
+                    }
+                  }
+                }
+                stage("Create or updated API Service") {
+                  steps {
+                    dir('environment') {
+                      sh 'oc apply -f service-templates/api/service.yaml'
+                    }
+                  }
+                }
+                stage("Create API Public route") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \""$(cat openshift-config/api/route.yaml)"\" >route2.yaml'
+                      sh 'mv route2.yaml openshift-config/api/route.yaml'
+                      sh 'oc apply -f openshift-config/api/route.yaml'
+                      sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}`"'
+                    }
+                  }
+                }
+
+                stage("Create persistent storage for DB") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \""$(cat openshift-config/MySQL/persistentVolume-claim0.yaml)"\" >persist1.yaml'
+                      sh 'mv persist0.yaml openshift-config/MySQL/persistentVolume-claim0.yaml'
+                      sh 'oc apply -f openshift-config/MySQL/persistentVolume-claim0.yaml'
+                    }
+                  }
+                }
+                stage("Create Image Stream for DB") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \""$(cat openshift-config/MySQL/imagestream.yaml)"\" >dbis.yaml'
+                      sh 'mv dbis.yaml openshift-config/MySQL/imagestream.yaml'
+                      sh 'oc apply -f openshift-config/MySQL/imagestream.yaml'
+                    }
+                  }
+                }
+                stage("Create DB Deployment Config") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \""$(cat openshift-config/MySQL/deploymentConfig.yaml)"\" >dbdc.yaml'
+                      sh 'mv dbdc.yaml openshift-config/MySQL/deploymentConfig.yaml'
+                      sh 'oc apply -f openshift-config/MySQL/deploymentConfig.yaml'
+                    }
+                  }
+                }
+                stage("Create Services for DB") {
+                  steps {
+                    dir('environment') {
+                      sh 'oc apply -f openshift-config/MySQL/service.yaml'
+                    }
+                  }
+                }
+              }
+            }
+            stage("Build API") {
+              agent {label 'maven'}
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHAPI}""]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'api']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOAPI}"]]
+                            ])
+                  }
+                }
+                stage("Build JAR") {
+                  steps {
+                    dir('api') {
+                      sh 'mvn -Dmaven.test.skip=true clean package'
+                    }
+                  }
+                }
+                stage("Create Build For Java Spring Boot Server") {
+                  steps {
+                    dir('api') {
+                      sh 'oc new-build --strategy docker --binary --name api --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                    }
+                  }
+                }
+                stage("Build api Server Image") {
+                  steps {
+                    dir('api') {
+                      sh 'oc start-build api --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1)'
+                      sh "oc tag ${PROJECTNAME}/api:latest ${PROJECTNAME}/api:${APIVERSION}" # Tag latest to version number to allow deployment
+                    }
+                  }
+                }
+                stage("Clean up deployment") {
+                  steps {
+                    dir('api') {
+                            sh 'oc delete pods $(oc get pods | awk '$3 ~ /Completed|Error/ {print $0}' | awk '$2 ~ /0\/1/ {print $1}')'
+                    }
+                  }
+                }
+              }
+            }
+            stage("Build Database Server") {
+              agent (label 'maven')
+              when {
+                environment name: 'BUILDDB', value: true
+              }
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHDB}""]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'db']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPODB}"]]
+                            ])
+                  }
+                }
+                stage("Create Build For Database Server") {
+                  steps {
+                    dir('db') {
+                      sh 'oc new-build --strategy docker --binary --name mysql --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                    }
+                  }
+                }
+                stage("Build Database Image") {
+                  steps {
+                    dir('db') {
+                      sh 'oc start-build mysql --from-dir . --follow --wait=true && rm Dockerfile'
+                      sh "oc tag ${PROJECTNAME}/mysql:latest ${PROJECTNAME}/mysql:${DBVERSION}"
+                    }
+                  }
+                }
+                stage("Clean up deployment") {
+                  steps {
+                    dir('dbmq') {
+                            sh 'oc delete pods $(oc get pods | awk '$3 ~ /Completed|Error/ {print $0}' | awk '$2 ~ /0\/1/ {print $1}')'
+                    }
+                  }
+                }
+              }
+            }
+            stage("Test application") {
+              agent (label 'maven')
+              when {
+                not { environment name: 'GITREPOTEST', value: 'false' }
+              }
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHTEST}""]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'tests']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOTEST}"]]
+                            ])
+                  }
+                }
+                stage("Test environment") {
+                  steps {
+                    dir('tests') {
+                      sh 'echo "You should perform tests to make sure your application works"'
+                      sh 'echo "Something like a curl to a status port -  curl http://trades.dev2.conygre.com/trades/status"'
+                      sh 'echo "Or http://trades.dev2.conygre.com/trades/list"'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+    type: JenkinsPipeline
+    triggers: {
+      pollSCM('H */2 * * 1-5')
+    }

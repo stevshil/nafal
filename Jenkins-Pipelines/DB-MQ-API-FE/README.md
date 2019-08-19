@@ -15,6 +15,10 @@ It is recommended that you have separate GIT repositories for;
 The build is parameterised to make the template repeatable and reusable.  The parameters are;
 * PROJECTNAME
   * This is the name of your project in OpenShift, must be unique
+* DOMAINNAME
+  * The servers FQDN (Fully Qualified Domain name)
+* GITREPOENV
+  * Git repository containing the OpenShift YAML files to define the environment to launch your containers (default = https://bitbucket.org/stevshil/openshift-templates.git)
 * GITREPOFE
   * The git URL for your Frontend repository
   * This should contain the code to build the files and the Dockerfile to build the container
@@ -33,15 +37,19 @@ The build is parameterised to make the template repeatable and reusable.  The pa
   * The version number for the message queue pod (default = 0.0.1)
 * FRONTENDVERSION
   * The version number for the frontend pod (default = 0.0.1)
-* BRANCH[FE|API|AUX|TEST]
-  * The branch to use to compile the code/containers
+* BRANCH[FE|API|AUX|TEST|ENV]
+  * The branch to use to compile the code/containers (default = master)
 * ANGULARCLIVERSION
   * The version of Angular required to compile the web site (default = 7.0.3)
 * DOCKERREG
   * The URL of the private docker registry (default = dockerreg.conygre.com:5000)
 * BUILDAUX
-  * Set to **true** if you want to build the database and message queue pods (default = false)
+  * Set to **true** if you want to build the database, message queue pods and create the environment (default = false)
   * By default the step will be skipped
+* FECHKURL
+  * Set to the URL that contains the health check for your web site container (default = /)
+* APICHKURL
+  * Set to the URL that contains the health check page for your API container (default = /api)
 
 # GIT repository layout
 The Jenkins pipeline makes the following assumptions about your GIT repository.
@@ -64,30 +72,40 @@ The directories are case sensitive, and must be lowercase.
 
 ## Tests
 
-All files are in the root of the git repository.openshift/frontend-service.yaml
+All files are to be in the root of the git repository pointed to by GITREPOTEST
 
-# OpenShift configuration
+## OpenShift configuration files
 
-The following OpenShift templates are required for each pod in the project;
+The Jenkins templates require the use of either the default GITREPOENV or if you choose to use your own GITREPOENV make sure that your git repository is laid out as follows;
 
-## Frontend
-* openshift/frontend-deploymentconfig.yaml
-* openshift/frontend-service.yaml
-* openshift/frontend-route.yaml
+```
+openshift-config
+|
+|-ActiveMQ
+| |-deploymentConfig.yaml
+| |-imagestream.yaml
+| |-persistentVolume-claim0
+| |-persistentVolume-claim1
+| |-route.yaml
+| |-service.yaml
+|
+|-API
+| |-deploymentConfig.yaml
+| |-imagestream.yaml
+| |-route.yaml
+| |-service.yaml
+|
+|-Frontend
+| |-deploymentConfig.yaml
+| |-imagestream.yaml
+| |-route.yaml
+| |-service.yaml
+|
+|-MySQL
+| |-deploymentConfig.yaml
+| |-imagestream.yaml
+| |-route.yaml
+| |-service.yaml
+```
 
-## API
-* openshift/api-deploymentconfig.yaml
-* openshift/api-service.yaml
-* openshift/api-route.yaml
-
-## Database
-* openshift/mq-persistentvolumeclaim.yaml
-* openshift/database-deploymentconfig.yaml
-* openshift/database-service.yaml
-
-## Message Queue
-* openshift/database-persistentvolumeclaim.yaml
-* openshift/mq-deploymentconfig.yaml
-* openshift/mq-service.yaml
-
-These files should be generated from running the **create-config-files** script and transferring the contents of the config directory to your git repositories.
+The contents of these files should match exactly what is in the ones found in the https://bitbucket.org/stevshil/openshift-templates.git repository under the **openshift-config** directory.

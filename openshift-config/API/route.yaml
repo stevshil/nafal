@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Route
+metadata:
+  name: api
+spec:
+  host: PROJECTNAME.${DOMAINNAME}
+  path: /api
+  port:
+    targetPort: '80'
+  to:
+    kind: Service
+    name: api

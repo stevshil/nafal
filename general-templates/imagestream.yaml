@@ -4,6 +4,8 @@ metadata:
   creationTimestamp: null
   labels:
     io.kompose.service: CONTAINERNAME
+  annotations:
+    openshift.io/image.insecureRepository: true
   name: CONTAINERNAME
 spec:
   lookupPolicy:

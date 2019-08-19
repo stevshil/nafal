@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Route
+metadata:
+  name: activemq
+spec:
+  host: activemq.PROJECTNAME.${DOMAINNAME}
+  port:
+    targetPort: '8161'
+  to:
+    kind: Service
+    name: activemq
