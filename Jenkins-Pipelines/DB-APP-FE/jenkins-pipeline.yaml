@@ -1,0 +1,306 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: pipeline
+spec:
+  strategy:
+    jenkinsPipelineStrategy:
+      env:
+        - name: PROJECTNAME
+          description: Name of the project in OpenShift
+        - name: DOMAINNAME
+          value: dev1.conygre.com
+        - name: GITREPOENV
+          value: https://bitbucket.org/stevshil/openshift-templates.git
+        - name: GITREPOFE
+        - name: GITREPOAPI
+        - name: GITREPODB
+        - name: GITREPOTEST
+          value: "false"
+        - name: APIVERSION
+          value: 0.0.1
+        - name: DBVERSION
+          value: 0.0.1
+        - name: FRONTENDVERSION
+          value: 0.0.1
+        - name: BRANCHENV
+          value: master
+        - name: BRANCHFE
+          value: master
+        - name: BRANCHAPI
+          value: master
+        - name: BRANCHDB
+          value: master
+        - name: BRANCHTEST
+          value: master
+        - name: ANGULARCLIVERSION
+          value: 7.0.3
+        - name: DOCKERREG
+          value: dockerreg.conygre.com:5000
+        - name: BUILDDB
+          value: "false"
+        - name: FECHKURL
+          value: /
+        - name: APICHKURL
+          value: /api
+      jenkinsfile: |-
+        pipeline {
+          agent none
+          stages {
+            stage ("Create OpenShift Environment") {
+              agent {label 'maven'}
+              when {
+                environment name: 'BUILDDB', value: "true"
+              }
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHENV}"]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'environment']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOENV}"]]
+                            ])
+                  }
+                }
+                stage("Create Frontend image stream") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \\""\$(cat openshift-config/Frontend/imagestream.yaml)\"\\" | oc apply -f -'
+                    }
+                  }
+                }
+                stage("Create or Update Frontend Deployment Config") {
+                  steps {
+                  dir('environment') {
+                      sh 'eval echo \\""\$(cat openshift-config/Frontend/deploymentConfig.yaml)\"\\" | oc apply -f -'
+                    }
+                  }
+                }
+                stage("Create or updated Frontend Service") {
+                  steps {
+                    dir('environment') {
+                      sh 'oc apply -f openshift-config/Frontend/service.yaml'
+                    }
+                  }
+                }
+                stage("Create Frontend Public route") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \\""\$(cat openshift-config/Frontend/route.yaml)\"\\" | oc apply -f -'
+                      sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}`"'
+                    }
+                  }
+                }
+
+                stage("Create API image stream") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \\""\$(cat openshift-config/API/imagestream.yaml)\"\\" | oc apply -f -'
+                    }
+                  }
+                }
+                stage("Create or Update API Deployment Config") {
+                  steps {
+                  dir('environment') {
+                      sh 'eval echo \\""\$(cat openshift-config/API/deploymentConfig.yaml)\"\\" | oc apply -f -'
+                    }
+                  }
+                }
+                stage("Create or updated API Service") {
+                  steps {
+                    dir('environment') {
+                      sh 'oc apply -f openshift-config/API/service.yaml'
+                    }
+                  }
+                }
+                stage("Create API Public route") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \\""\$(cat openshift-config/API/route.yaml)\"\\" | oc apply -f -'
+                      sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}`"'
+                    }
+                  }
+                }
+
+                stage("Create persistent storage for DB") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/persistentVolume-claim0.yaml)\"\\" | oc apply -f -'
+                    }
+                  }
+                }
+                stage("Create Image Stream for DB") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/imagestream.yaml)\"\\" | oc apply -f -'
+                    }
+                  }
+                }
+                stage("Create DB Deployment Config") {
+                  steps {
+                    dir('environment') {
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/deploymentConfig.yaml)\"\\" | oc apply -f'
+                    }
+                  }
+                }
+                stage("Create Services for DB") {
+                  steps {
+                    dir('environment') {
+                      sh 'oc apply -f openshift-config/MySQL/service.yaml'
+                    }
+                  }
+                }
+              }
+            }
+            stage ("Build Front End") {
+              agent {label 'nodejs'}
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHFE}"]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'frontend']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOFE}"]]
+                            ])
+                  }
+                }
+                stage("Install Angular") {
+                  steps {
+                    dir('frontend') {
+                      sh "npm install -g @angular/cli@${ANGULARCLIVERSION}"
+                    }
+                  }
+                }
+                stage("Angular build") {
+                  steps {
+                    dir('frontend') {
+                      sh 'npm install'
+                      sh 'ng build --prod=true'
+                    }
+                  }
+                }
+                stage("Create Build For Frontend Server") {
+                  steps {
+                    dir('frontend') {
+                      sh 'oc new-build --strategy docker --binary --name frontend --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh "oc patch bc frontend -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/frontend:${APIVERSION}\"}} }}'"
+                    }
+                  }
+                }
+                stage("Build Frontend Image") {
+                  steps {
+                    dir('frontend') {
+                      sh 'oc start-build frontend --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1')
+                    }
+                  }
+                }
+              }
+            }
+            stage("Build API") {
+              agent {label 'maven'}
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHAPI}""]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'api']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOAPI}"]]
+                            ])
+                  }
+                }
+                stage("Build JAR") {
+                  steps {
+                    dir('api') {
+                      sh 'mvn -Dmaven.test.skip=true clean package'
+                    }
+                  }
+                }
+                stage("Create Build For Java Spring Boot Server") {
+                  steps {
+                    dir('api') {
+                      sh 'oc new-build --strategy docker --binary --name api --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh "oc patch bc api -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/api:${APIVERSION}\"}} }}'"
+                    }
+                  }
+                }
+                stage("Build API Server Image") {
+                  steps {
+                    dir('api') {
+                      sh 'oc start-build api --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1)'
+                    }
+                  }
+                }
+              }
+            }
+            stage("Build Database Server") {
+              agent (label 'maven')
+              when {
+                environment name: 'BUILDDB', value: true
+              }
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHDB}""]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'db']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPODB}"]]
+                            ])
+                  }
+                }
+                stage("Create Build For Database Server") {
+                  steps {
+                    dir('db') {
+                      sh 'oc new-build --strategy docker --binary --name mysql --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh "oc patch bc mysql -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/mysql:${APIVERSION}\"}} }}'"
+                    }
+                  }
+                }
+                stage("Build Database Image") {
+                  steps {
+                    dir('db') {
+                      sh 'oc start-build mysql --from-dir . --follow --wait=true'
+                    }
+                  }
+                }
+              }
+            }
+            stage("Test Application") {
+              agent (label 'maven')
+              when {
+                not { environment name: 'GITREPOTEST', value: 'false' }
+              }
+              stages {
+                stage("Clone Source") {
+                  steps {
+                    checkout([$class: 'GitSCM',
+                                branches: [[name: "*/${BRANCHTEST}""]],
+                                extensions: [
+                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'tests']
+                                ],
+                                userRemoteConfigs: [[url: "${GITREPOTEST}"]]
+                            ])
+                  }
+                }
+                stage("Test environment") {
+                  steps {
+                    dir('tests') {
+                      sh 'echo "You should perform tests to make sure your application works"'
+                      sh 'echo "Something like a curl to a status port -  curl http://trades.dev2.conygre.com/trades/status"'
+                      sh 'echo "Or http://trades.dev2.conygre.com/trades/list"'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+    type: JenkinsPipeline
+    triggers: {}
