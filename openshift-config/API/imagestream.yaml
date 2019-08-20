@@ -14,7 +14,7 @@ spec:
         api server Image Stream.
     from:
       kind: DockerImage
-      name: dockerreg.conygre.com:5000/${PROJECTNAME}/api:${APIVERSION}
+      name: ${DOCKERREG}/${PROJECTNAME}/api:${APIVERSION}
     generation: null
     importPolicy:
       insecure: true

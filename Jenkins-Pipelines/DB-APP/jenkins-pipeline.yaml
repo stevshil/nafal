@@ -140,6 +140,7 @@ spec:
                   steps {
                     dir('api') {
                       sh 'oc new-build --strategy docker --binary --name api --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh "oc patch bc api -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/api:${APIVERSION}\"}} }}'"
                     }
                   }
                 }
@@ -147,7 +148,6 @@ spec:
                   steps {
                     dir('api') {
                       sh 'oc start-build api --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1)'
-                      sh "oc tag ${PROJECTNAME}/api:latest ${PROJECTNAME}/api:${APIVERSION}"
                     }
                   }
                 }
@@ -174,14 +174,14 @@ spec:
                   steps {
                     dir('db') {
                       sh 'oc new-build --strategy docker --binary --name mysql --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh "oc patch bc mysql -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/mysql:${DBVERSION}\"}} }}'"
                     }
                   }
                 }
                 stage("Build Database Image") {
                   steps {
                     dir('db') {
-                      sh 'oc start-build mysql --from-dir . --follow --wait=true && rm Dockerfile'
-                      sh "oc tag ${PROJECTNAME}/mysql:latest ${PROJECTNAME}/mysql:${DBVERSION}"
+                      sh 'oc start-build mysql --from-dir . --follow --wait=true'
                     }
                   }
                 }

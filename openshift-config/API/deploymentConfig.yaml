@@ -21,7 +21,7 @@ spec:
         io.kompose.service: api
     spec:
       containers:
-      - image: dockerreg.conygre.com:5000/${PROJECTNAME}/api:${APIVERSION}
+      - image: ${DOCKERREG}/${PROJECTNAME}/api:${APIVERSION}
         name: api
         ports:
         - containerPort: 8080
@@ -51,6 +51,6 @@ spec:
       - api
       from:
         kind: ImageStreamTag
-        name: dockerreg.conygre.com:5000/${PROJECTNAME}/api:${APIVERSION}
+        name: ${DOCKERREG}/${PROJECTNAME}/api:${APIVERSION}
     type: ImageChange
 status: {}

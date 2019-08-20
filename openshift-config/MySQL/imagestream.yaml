@@ -14,7 +14,7 @@ spec:
         MySQL server Image Stream.
     from:
       kind: DockerImage
-      name: dockerreg.conygre.com:5000/${PROJECTNAME}/mysql:${DBVERSION}
+      name: ${DOCKERREG}/${PROJECTNAME}/mysql:${DBVERSION}
     generation: null
     importPolicy:
       insecure: true

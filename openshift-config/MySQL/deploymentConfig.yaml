@@ -23,7 +23,7 @@ spec:
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: root
-        image: dockerreg.conygre.com:5000/${PROJECTNAME}/mysql:${DBVERSION}
+        image: ${DOCKERREG}/${PROJECTNAME}/mysql:${DBVERSION}
         name: mysql
         ports:
         - containerPort: 3306
@@ -45,6 +45,6 @@ spec:
       - mysql
       from:
         kind: ImageStreamTag
-        name: dockerreg.conygre.com:5000/${PROJECTNAME}/mysql:${DBVERSION}
+        name: ${DOCKERREG}/${PROJECTNAME}/mysql:${DBVERSION}
     type: ImageChange
 status: {}
