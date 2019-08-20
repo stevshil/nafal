@@ -52,7 +52,7 @@ spec:
             stage ("Create OpenShift Environment") {
               agent {label 'maven'}
               when {
-                environment name: 'BUILDAUX', value: true
+                environment name: 'BUILDAUX', value: "true"
               }
               stages {
                 stage("Clone Source") {
@@ -69,35 +69,28 @@ spec:
                 stage("Create Frontend image stream") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/Frontend/imagestream.yaml)"\" >imagestream2.yaml'
-                      sh 'mv imagestream2.yaml openshift-config/Frontend/imagestream.yaml'
-                      sh 'oc apply -f openshift-config/Frontend/imagestream.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/Frontend/imagestream.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
                 stage("Create or Update Frontend Deployment Config") {
                   steps {
                   dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/Frontend/deploymentConfig.yaml)"\" >deploymentConfig2.yaml'
-                      sh 'mv deploymentConfig.yaml openshift-config/Frontend/deploymentConfig.yaml'
-                      sh 'oc apply -f openshift-config/Frontend/deploymentConfig.yaml'
-                      sh 'oc apply -f service-templates/Frontend/deploymentConfig.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/Frontend/deploymentConfig.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
                 stage("Create or updated Frontend Service") {
                   steps {
                     dir('environment') {
-                      sh 'oc apply -f service-templates/Frontend/service.yaml'
+                      sh 'oc apply -f openshift-config/Frontend/service.yaml'
                     }
                   }
                 }
                 stage("Create Frontend Public route") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/Frontend/route.yaml)"\" >route2.yaml'
-                      sh 'mv route2.yaml openshift-config/Frontend/route.yaml'
-                      sh 'oc apply -f openshift-config/Frontend/route.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/Frontend/route.yaml)\"\\" | oc apply -f -'
                       sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}`"'
                     }
                   }
@@ -106,35 +99,28 @@ spec:
                 stage("Create API image stream") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/API/imagestream.yaml)"\" >imagestream2.yaml'
-                      sh 'mv imagestream2.yaml openshift-config/API/imagestream.yaml'
-                      sh 'oc apply -f openshift-config/API/imagestream.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/API/imagestream.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
                 stage("Create or Update API Deployment Config") {
                   steps {
                   dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/API/deploymentConfig.yaml)"\" >deploymentConfig2.yaml'
-                      sh 'mv deploymentConfig.yaml openshift-config/API/deploymentConfig.yaml'
-                      sh 'oc apply -f openshift-config/API/deploymentConfig.yaml'
-                      sh 'oc apply -f service-templates/API/deploymentConfig.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/API/deploymentConfig.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
                 stage("Create or updated API Service") {
                   steps {
                     dir('environment') {
-                      sh 'oc apply -f service-templates/API/service.yaml'
+                      sh 'oc apply -f openshift-config/API/service.yaml'
                     }
                   }
                 }
                 stage("Create API Public route") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/API/route.yaml)"\" >route2.yaml'
-                      sh 'mv route2.yaml openshift-config/API/route.yaml'
-                      sh 'oc apply -f openshift-config/API/route.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/API/route.yaml)\"\\" | oc apply -f -'
                       sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}`"'
                     }
                   }
@@ -143,41 +129,25 @@ spec:
                 stage("Create persistent storage for DB and MQ") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/ActiveMQ/persistentVolume-claim0.yaml)"\" >persist0.yaml'
-                      sh 'mv persist0.yaml openshift-config/ActiveMQ/persistentVolume-claim0.yaml'
-                      sh 'oc apply -f openshift-config/ActiveMQ/persistentVolume-claim0.yaml'
-                      sh 'eval echo \""$(cat openshift-config/ActiveMQ/persistentVolume-claim1.yaml)"\" >persist1.yaml'
-                      sh 'mv persist0.yaml openshift-config/ActiveMQ/persistentVolume-claim1.yaml'
-                      sh 'oc apply -f openshift-config/ActiveMQ/persistentVolume-claim1.yaml'
-                      sh 'eval echo \""$(cat openshift-config/MySQL/persistentVolume-claim0.yaml)"\" >persist1.yaml'
-                      sh 'mv persist0.yaml openshift-config/MySQL/persistentVolume-claim0.yaml'
-                      sh 'oc apply -f openshift-config/MySQL/persistentVolume-claim0.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/ActiveMQ/persistentVolume-claim0.yaml)\"\\" | oc apply -f -'
+                      sh 'eval echo \\""\$(cat openshift-config/ActiveMQ/persistentVolume-claim1.yaml)\"\\" | oc apply -f -'
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/persistentVolume-claim0.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
                 stage("Create Image Stream for DB and AMQ") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/ActiveMQ/imagestream.yaml)"\" >amqis.yaml'
-                      sh 'mv amqis.yaml openshift-config/ActiveMQ/imagestream.yaml'
-                      sh 'oc apply -f openshift-config/ActiveMQ/imagestream.yaml'
-
-                      sh 'eval echo \""$(cat openshift-config/MySQL/imagestream.yaml)"\" >dbis.yaml'
-                      sh 'mv dbis.yaml openshift-config/MySQL/imagestream.yaml'
-                      sh 'oc apply -f openshift-config/MySQL/imagestream.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/ActiveMQ/imagestream.yaml)\"\\" | oc apply -f -'
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/imagestream.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
                 stage("Create DB and MQ Deployment Config") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/ActiveMQ/deploymentConfig.yaml)"\" >amqdc.yaml'
-                      sh 'mv amqdc.yaml openshift-config/ActiveMQ/deploymentConfig.yaml'
-                      sh 'oc apply -f openshift-config/ActiveMQ/deploymentConfig.yaml'
-
-                      sh 'eval echo \""$(cat openshift-config/MySQL/deploymentConfig.yaml)"\" >dbdc.yaml'
-                      sh 'mv dbdc.yaml openshift-config/MySQL/deploymentConfig.yaml'
-                      sh 'oc apply -f openshift-config/MySQL/deploymentConfig.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/ActiveMQ/deploymentConfig.yaml)\"\\" | oc apply -f -'
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/deploymentConfig.yaml)\"\\" | oc apply -f'
                     }
                   }
                 }
@@ -224,6 +194,7 @@ spec:
                   steps {
                     dir('frontend') {
                       sh 'oc new-build --strategy docker --binary --name frontend --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh "oc patch bc frontend -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/frontend:${APIVERSION}\"}} }}'"
                     }
                   }
                 }
@@ -231,14 +202,6 @@ spec:
                   steps {
                     dir('frontend') {
                       sh 'oc start-build frontend --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1')
-                      sh "oc tag ${PROJECTNAME}/frontend:latest ${PROJECTNAME}/frontend:${FRONTENDVERSION}" # Tag latest to version number to allow deployment
-                    }
-                  }
-                }
-                stage("Clean up deployment") {
-                  steps {
-                    dir('frontend') {
-                            sh 'oc delete pods $(oc get pods | awk '$3 ~ /Completed|Error/ {print $0}' | awk '$2 ~ /0\/1/ {print $1}')'
                     }
                   }
                 }
@@ -269,6 +232,7 @@ spec:
                   steps {
                     dir('api') {
                       sh 'oc new-build --strategy docker --binary --name api --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh "oc patch bc api -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/api:${APIVERSION}\"}} }}'"
                     }
                   }
                 }
@@ -276,14 +240,6 @@ spec:
                   steps {
                     dir('api') {
                       sh 'oc start-build api --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1)'
-                      sh "oc tag ${PROJECTNAME}/api:latest ${PROJECTNAME}/api:${APIVERSION}" # Tag latest to version number to allow deployment
-                    }
-                  }
-                }
-                stage("Clean up deployment") {
-                  steps {
-                    dir('api') {
-                            sh 'oc delete pods $(oc get pods | awk '$3 ~ /Completed|Error/ {print $0}' | awk '$2 ~ /0\/1/ {print $1}')'
                     }
                   }
                 }
@@ -309,37 +265,30 @@ spec:
                 stage("Create Build For Database Server") {
                   steps {
                     dir('dbmq/db') {
-                      sh 'oc new-build --strategy docker --binary --name database --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh 'oc new-build --strategy docker --binary --name mysql --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh "oc patch bc mysql -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/mysql:${APIVERSION}\"}} }}'"
                     }
                   }
                 }
                 stage("Build Database Image") {
                   steps {
                     dir('dbmq/db') {
-                      sh 'oc start-build mysql --from-dir . --follow --wait=true && rm Dockerfile'
-                      sh "oc tag ${PROJECTNAME}/database:latest ${PROJECTNAME}/database:${DBVERSION}"
+                      sh 'oc start-build mysql --from-dir . --follow --wait=true'
                     }
                   }
                 }
                 stage("Create Build For Message Queue Server") {
                   steps {
                     dir('dbmq/mq') {
-                      sh 'oc new-build --strategy docker --binary --name mq --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh 'oc new-build --strategy docker --binary --name activemq --to=${DOCKERREG} --to-docker || echo "Build already exists"'
+                      sh "oc patch bc activemq -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/activemq:${APIVERSION}\"}} }}'"
                     }
                   }
                 }
                 stage("Build Message Queue Server Image") {
                   steps {
                     dir('dbmq/mq') {
-                      sh 'oc start-build activemq --from-dir . --follow --wait=true && rm Dockerfile'
-                      sh "oc tag ${PROJECTNAME}/mq:latest ${PROJECTNAME}/mq:${MQVERSION}"
-                    }
-                  }
-                }
-                stage("Clean up deployment") {
-                  steps {
-                    dir('dbmq') {
-                            sh 'oc delete pods $(oc get pods | awk '$3 ~ /Completed|Error/ {print $0}' | awk '$2 ~ /0\/1/ {print $1}')'
+                      sh 'oc start-build activemq --from-dir . --follow --wait=true'
                     }
                   }
                 }

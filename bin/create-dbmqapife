@@ -13,7 +13,7 @@ else
   oc new-project ${projectname}
 fi
 
-oc apply -f Jenkins-Pipelines/DB-APP/jenkins-pipeline.yaml
+oc apply -f Jenkins-Pipelines/DB-MQ-API-FE/jenkins-pipeline.yaml
 
 # Give Jenkins time to start
 counter=0

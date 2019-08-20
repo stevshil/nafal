@@ -14,7 +14,7 @@ spec:
         frontend server Image Stream.
     from:
       kind: DockerImage
-      name: dockerreg.conygre.com:5000/${PROJECTNAME}/frontend:${FRONTENDVERSION}
+      name: ${DOCKERREG}/${PROJECTNAME}/frontend:${FRONTENDVERSION}
     generation: null
     importPolicy:
       insecure: true

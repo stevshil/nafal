@@ -14,7 +14,7 @@ spec:
         ActiveMQ server Image Stream.
     from:
       kind: DockerImage
-      name: dockerreg.conygre.com:5000/${PROJECTNAME}/activemq:${MQVERSION}
+      name: ${DOCKERREG}/${PROJECTNAME}/activemq:${MQVERSION}
     generation: null
     importPolicy:
       insecure: true

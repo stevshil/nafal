@@ -21,7 +21,7 @@ spec:
         io.kompose.service: frontend
     spec:
       containers:
-      - image: dockerreg.conygre.com:5000/${PROJECTNAME}/frontend:${FRONTENDVERSION}
+      - image: ${DOCKERREG}/${PROJECTNAME}/frontend:${FRONTENDVERSION}
         name: frontend
         ports:
         - containerPort: 80
@@ -51,6 +51,6 @@ spec:
       - frontend
       from:
         kind: ImageStreamTag
-        name: dockerreg.conygre.com:5000/${PROJECTNAME}/frontend:${FRONTENDVERSION}
+        name: ${DOCKERREG}/${PROJECTNAME}/frontend:${FRONTENDVERSION}
     type: ImageChange
 status: {}

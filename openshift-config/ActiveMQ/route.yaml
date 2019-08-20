@@ -3,7 +3,7 @@ kind: Route
 metadata:
   name: activemq
 spec:
-  host: activemq.PROJECTNAME.${DOMAINNAME}
+  host: activemq.${PROJECTNAME}.${DOMAINNAME}
   port:
     targetPort: '8161'
   to:
