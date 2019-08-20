@@ -43,12 +43,4 @@ spec:
   test: false
   triggers:
   - type: ConfigChange
-  - imageChangeParams:
-      automatic: true
-      containerNames:
-      - activemq
-      from:
-        kind: ImageStreamTag
-        name: ${DOCKERREG}/${PROJECTNAME}/activemq:${MQVERSION}
-    type: ImageChange
 status: {}

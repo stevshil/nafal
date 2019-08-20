@@ -22,6 +22,7 @@ spec:
     spec:
       containers:
       - image: ${DOCKERREG}/${PROJECTNAME}/api:${APIVERSION}
+        imagePullPolicy: IfNotPresent
         name: api
         ports:
         - containerPort: 8080
@@ -45,12 +46,4 @@ spec:
   test: false
   triggers:
   - type: ConfigChange
-  - imageChangeParams:
-      automatic: true
-      containerNames:
-      - api
-      from:
-        kind: ImageStreamTag
-        name: ${DOCKERREG}/${PROJECTNAME}/api:${APIVERSION}
-    type: ImageChange
 status: {}
