@@ -95,7 +95,7 @@ spec:
                 stage("Create Image Stream for DB") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/MySQL/imagestream.yaml)\"\\" | oc apply -f -'
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/imagestream.yaml)"\\" | oc apply -f -'
                     }
                   }
                 }
