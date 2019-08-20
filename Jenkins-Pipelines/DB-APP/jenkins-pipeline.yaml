@@ -9,7 +9,7 @@ spec:
         - name: PROJECTNAME
           description: Name of the project in OpenShift
         - name: DOMAINNAME
-          value: dev1.conygre.com
+          value: dev2.conygre.com
         - name: GITREPOENV
           value: https://bitbucket.org/stevshil/openshift-templates.git
         - name: GITREPOAPI
