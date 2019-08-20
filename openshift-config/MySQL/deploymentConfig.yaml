@@ -45,6 +45,6 @@ spec:
       - mysql
       from:
         kind: ImageStreamTag
-        name: dockerreg.conygre.com:5000/${PROJECTNAME}/mysql:${MQVERSION}
+        name: dockerreg.conygre.com:5000/${PROJECTNAME}/mysql:${DBVERSION}
     type: ImageChange
 status: {}
