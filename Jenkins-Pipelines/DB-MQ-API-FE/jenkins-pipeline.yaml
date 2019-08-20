@@ -40,7 +40,7 @@ spec:
         - name: DOCKERREG
           value: dockerreg.conygre.com:5000
         - name: BUILDAUX
-          value: false
+          value: "false"
         - name: FECHKURL
           value: /
         - name: APICHKURL

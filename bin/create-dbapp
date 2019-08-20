@@ -1,0 +1,6 @@
+#!/bin/bash
+
+oc start-build pipeline -e PROJECTNAME=steve \
+-e GITREPOAPI=https://bitbucket.org/stevshil/hello-world-spring-boot.git \
+-e GITREPODB=https://bitbucket.org/stevshil/dockerDB.git \
+-e BUILDDB="true"

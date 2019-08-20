@@ -31,7 +31,7 @@ spec:
         - name: DOCKERREG
           value: dockerreg.conygre.com:5000
         - name: BUILDDB
-          value: false
+          value: "false"
         - name: APICHKURL
           value: /
       jenkinsfile: |-
@@ -41,7 +41,7 @@ spec:
             stage ("Create OpenShift Environment") {
               agent {label 'maven'}
               when {
-                environment name: 'BUILDDB', value: true
+                environment name: 'BUILDDB', value: "true"
               }
               stages {
                 stage("Clone Source") {
@@ -58,35 +58,28 @@ spec:
                 stage("Create API image stream") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/api/imagestream.yaml)"\" >imagestream2.yaml'
-                      sh 'mv imagestream2.yaml openshift-config/api/imagestream.yaml'
-                      sh 'oc apply -f openshift-config/api/imagestream.yaml'
+                      sh 'eval echo \\"\"$(cat openshift-config/API/imagestream.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
                 stage("Create or Update API Deployment Config") {
                   steps {
                   dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/api/deploymentConfig.yaml)"\" >deploymentConfig2.yaml'
-                      sh 'mv deploymentConfig.yaml openshift-config/api/deploymentConfig.yaml'
-                      sh 'oc apply -f openshift-config/api/deploymentConfig.yaml'
-                      sh 'oc apply -f service-templates/api/deploymentConfig.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/API/deploymentConfig.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
                 stage("Create or updated API Service") {
                   steps {
                     dir('environment') {
-                      sh 'oc apply -f service-templates/api/service.yaml'
+                      sh 'oc apply -f openshift-config/API/service.yaml'
                     }
                   }
                 }
                 stage("Create API Public route") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/api/route.yaml)"\" >route2.yaml'
-                      sh 'mv route2.yaml openshift-config/api/route.yaml'
-                      sh 'oc apply -f openshift-config/api/route.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/API/route.yaml)\"\\" | oc apply -f -'
                       sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}`"'
                     }
                   }
@@ -95,27 +88,21 @@ spec:
                 stage("Create persistent storage for DB") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/MySQL/persistentVolume-claim0.yaml)"\" >persist1.yaml'
-                      sh 'mv persist0.yaml openshift-config/MySQL/persistentVolume-claim0.yaml'
-                      sh 'oc apply -f openshift-config/MySQL/persistentVolume-claim0.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/persistentVolume-claim0.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
                 stage("Create Image Stream for DB") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/MySQL/imagestream.yaml)"\" >dbis.yaml'
-                      sh 'mv dbis.yaml openshift-config/MySQL/imagestream.yaml'
-                      sh 'oc apply -f openshift-config/MySQL/imagestream.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/imagestream.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
                 stage("Create DB Deployment Config") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \""$(cat openshift-config/MySQL/deploymentConfig.yaml)"\" >dbdc.yaml'
-                      sh 'mv dbdc.yaml openshift-config/MySQL/deploymentConfig.yaml'
-                      sh 'oc apply -f openshift-config/MySQL/deploymentConfig.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/deploymentConfig.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
@@ -134,7 +121,7 @@ spec:
                 stage("Clone Source") {
                   steps {
                     checkout([$class: 'GitSCM',
-                                branches: [[name: "*/${BRANCHAPI}""]],
+                                branches: [[name: "*/${BRANCHAPI}"]],
                                 extensions: [
                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'api']
                                 ],
@@ -160,29 +147,22 @@ spec:
                   steps {
                     dir('api') {
                       sh 'oc start-build api --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1)'
-                      sh "oc tag ${PROJECTNAME}/api:latest ${PROJECTNAME}/api:${APIVERSION}" # Tag latest to version number to allow deployment
-                    }
-                  }
-                }
-                stage("Clean up deployment") {
-                  steps {
-                    dir('api') {
-                            sh 'oc delete pods $(oc get pods | awk '$3 ~ /Completed|Error/ {print $0}' | awk '$2 ~ /0\/1/ {print $1}')'
+                      sh "oc tag ${PROJECTNAME}/api:latest ${PROJECTNAME}/api:${APIVERSION}"
                     }
                   }
                 }
               }
             }
             stage("Build Database Server") {
-              agent (label 'maven')
+              agent {label 'maven'}
               when {
-                environment name: 'BUILDDB', value: true
+                environment name: 'BUILDDB', value: "true"
               }
               stages {
                 stage("Clone Source") {
                   steps {
                     checkout([$class: 'GitSCM',
-                                branches: [[name: "*/${BRANCHDB}""]],
+                                branches: [[name: "*/${BRANCHDB}"]],
                                 extensions: [
                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'db']
                                 ],
@@ -205,17 +185,10 @@ spec:
                     }
                   }
                 }
-                stage("Clean up deployment") {
-                  steps {
-                    dir('dbmq') {
-                            sh 'oc delete pods $(oc get pods | awk '$3 ~ /Completed|Error/ {print $0}' | awk '$2 ~ /0\/1/ {print $1}')'
-                    }
-                  }
-                }
               }
             }
             stage("Test application") {
-              agent (label 'maven')
+              agent {label 'maven'}
               when {
                 not { environment name: 'GITREPOTEST', value: 'false' }
               }
@@ -223,7 +196,7 @@ spec:
                 stage("Clone Source") {
                   steps {
                     checkout([$class: 'GitSCM',
-                                branches: [[name: "*/${BRANCHTEST}""]],
+                                branches: [[name: "*/${BRANCHTEST}"]],
                                 extensions: [
                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'tests']
                                 ],
@@ -245,6 +218,4 @@ spec:
           }
         }
     type: JenkinsPipeline
-    triggers: {
-      pollSCM('H */2 * * 1-5')
-    }
+    triggers: {}
