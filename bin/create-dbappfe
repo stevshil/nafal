@@ -5,15 +5,19 @@
 echo -n "Enter name for project: "
 read projectname
 
-if oc projects | grep ${projectname} >/dev/null 2>&1
+if oc projects >/dev/null 2>&1 | grep ${projectname}
 then
   echo "That project already exists, please choose another."
   exit 1
-else
-  oc new-project ${projectname}
 fi
 
-oc apply -f Jenkins-Pipelines/DB-APP/jenkins-pipeline.yaml
+if ! oc new-project ${projectname} >/dev/null 2>&1
+then
+  echo "Unable to create new project, please check that you are logged on to OpenShift"
+  exit 2
+fi
+
+oc apply -f Jenkins-Pipelines/DB-APP-FE/jenkins-pipeline.yaml
 
 # Give Jenkins time to start
 counter=0
