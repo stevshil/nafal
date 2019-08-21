@@ -194,7 +194,7 @@ spec:
                 stage("Build Frontend Image") {
                   steps {
                     dir('frontend') {
-                      sh 'oc start-build frontend --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1')
+                      sh 'oc start-build frontend --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1)'
                     }
                   }
                 }
@@ -206,7 +206,7 @@ spec:
                 stage("Clone Source") {
                   steps {
                     checkout([$class: 'GitSCM',
-                                branches: [[name: "*/${BRANCHAPI}""]],
+                                branches: [[name: "*/${BRANCHAPI}"]],
                                 extensions: [
                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'api']
                                 ],
@@ -239,15 +239,15 @@ spec:
               }
             }
             stage("Build Database Server") {
-              agent (label 'maven')
+              agent {label 'maven'}
               when {
-                environment name: 'BUILDDB', value: true
+                environment name: 'BUILDDB', value: "true"
               }
               stages {
                 stage("Clone Source") {
                   steps {
                     checkout([$class: 'GitSCM',
-                                branches: [[name: "*/${BRANCHDB}""]],
+                                branches: [[name: "*/${BRANCHDB}"]],
                                 extensions: [
                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'db']
                                 ],
@@ -259,7 +259,7 @@ spec:
                   steps {
                     dir('db') {
                       sh 'oc new-build --strategy docker --binary --name mysql --to=${DOCKERREG} --to-docker || echo "Build already exists"'
-                      sh "oc patch bc mysql -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/mysql:${APIVERSION}\"}} }}'"
+                      sh "oc patch bc mysql -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/mysql:${DBVERSION}\"}} }}'"
                     }
                   }
                 }
@@ -272,8 +272,8 @@ spec:
                 }
               }
             }
-            stage("Test Application") {
-              agent (label 'maven')
+            stage("Test application") {
+              agent {label 'maven'}
               when {
                 not { environment name: 'GITREPOTEST', value: 'false' }
               }
@@ -281,7 +281,7 @@ spec:
                 stage("Clone Source") {
                   steps {
                     checkout([$class: 'GitSCM',
-                                branches: [[name: "*/${BRANCHTEST}""]],
+                                branches: [[name: "*/${BRANCHTEST}"]],
                                 extensions: [
                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'tests']
                                 ],

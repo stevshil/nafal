@@ -5,29 +5,36 @@
 echo -n "Enter name for project: "
 read projectname
 
-if oc projects >/dev/null 2>&1 | grep ${projectname}
+if oc projects 2>&1 | grep ${projectname}
 then
-  echo "That project already exists, please choose another."
-  exit 1
+  echo -n "That project already exists, do you wish to use it (y/n)? "
+  read answer
+  if [[ $answer == n* ]]
+  then
+    exit 1
+  fi
 fi
 
 if ! oc new-project ${projectname} >/dev/null 2>&1
 then
-  echo "Unable to create new project, please check that you are logged on to OpenShift"
-  exit 2
+  oc project ${projectname}
 fi
 
 oc apply -f Jenkins-Pipelines/DB-MQ-API-FE/jenkins-pipeline.yaml
 
 # Give Jenkins time to start
-counter=0
-echo -n "Waiting for Jenkins: "
-while (( counter <= 20 ))
-do
-  echo -n "."
-  sleep 15
-  ((counter=counter+1))
-done
+if ! oc get pods | grep jenkins
+then
+  # Give Jenkins time to start
+  counter=0
+  echo -n "Waiting for Jenkins: "
+  while (( counter <= 20 ))
+  do
+    echo -n "."
+    sleep 15
+    ((counter=counter+1))
+  done
+fi
 
 oc start-build pipeline -e PROJECTNAME=${projectname} \
 -e GITREPOAPI=https://bitbucket.org/stevshil/hello-world-spring-boot.git \
