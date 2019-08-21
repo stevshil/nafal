@@ -141,7 +141,7 @@ spec:
                 stage("Create DB Deployment Config") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/MySQL/deploymentConfig.yaml)\"\\" | oc apply -f'
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/deploymentConfig.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
