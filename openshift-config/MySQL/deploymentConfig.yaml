@@ -22,14 +22,14 @@ spec:
         - --explicit_defaults_for_timestamp
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: root
+          value: ${MYSQLROOTPW}
         image: ${DOCKERREG}/${PROJECTNAME}/mysql:${DBVERSION}
         name: mysql
         ports:
         - containerPort: 3306
         resources: {}
         volumeMounts:
-        - mountPath: /var/lib/mysql
+        - mountPath: ${DBMOUNT}
           name: mysql-claim0
       restartPolicy: Always
       volumes:

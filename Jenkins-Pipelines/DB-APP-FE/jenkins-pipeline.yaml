@@ -16,10 +16,13 @@ spec:
           value: https://bitbucket.org/stevshil/openshift-templates.git
         - name: GITREPOFE
           description: Git repository URL for your Frontend Application layer
+          value: https://bitbucket.org/stevshil/openshift-angular-app.git
         - name: GITREPOAPI
           description: Git repository URL for your API Application layer
+          value: https://bitbucket.org/stevshil/hello-world-spring-boot.git
         - name: GITREPODB
           description: Git repository URL for your Database layer
+          value: https://bitbucket.org/stevshil/dockerdb.git
         - name: GITREPOTEST
           description: Git repository URL for your end to end tests
           value: "false"
@@ -62,6 +65,12 @@ spec:
         - name: APICHKURL
           description: URL to check to ensure application is ready and running
           value: /api
+        - name: DBMOUNT
+          description: Persistent data storage directory within the database container
+          value: /var/lib/mysql
+        - name: MYSQLROOTPW
+          description: Root password for MySQL
+          value: root
       jenkinsfile: |-
         pipeline {
           agent none

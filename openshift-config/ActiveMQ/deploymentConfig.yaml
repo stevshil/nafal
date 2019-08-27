@@ -28,9 +28,9 @@ spec:
         - containerPort: 8161
         resources: {}
         volumeMounts:
-        - mountPath: /data/activemq
+        - mountPath: ${AMQMOUNT0}
           name: activemq-claim0
-        - mountPath: /var/log/activemq
+        - mountPath: ${AMQMOUNT1}
           name: activemq-claim1
       restartPolicy: Always
       volumes:
