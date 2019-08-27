@@ -9,41 +9,61 @@ spec:
         - name: PROJECTNAME
           description: Name of the project in OpenShift
         - name: DOMAINNAME
+          description: The domain name of the OpenShift server
           value: dev2.conygre.com
         - name: GITREPOENV
+          description: Git repository URL for the OpenShift templates
           value: https://bitbucket.org/stevshil/openshift-templates.git
         - name: GITREPOFE
+          description: Git repository URL for your Frontend Application layer
         - name: GITREPOAPI
+          description: Git repository URL for your API Application layer
         - name: GITREPOAUX
+          description: Git repository URL for your Database and Message Queue layer
         - name: GITREPOTEST
+          description: Git repository URL for your end to end tests
           value: "false"
         - name: APIVERSION
+          description: The version number for your API layer container and code
           value: 0.0.1
         - name: DBVERSION
+          description: The version number for you Database layer container
           value: 0.0.1
         - name: MQVERSION
+          description: The version number for you Message Queue layer container
           value: 0.0.1
         - name: FRONTENDVERSION
+          description: The version number for you Frontend layer container
           value: 0.0.1
         - name: BRANCHENV
+          description: The branch name to use for the environment
           value: master
         - name: BRANCHFE
+          description: The branch name to use for the Frontend layer container and code
           value: master
         - name: BRANCHAPI
+          description: The branch name to use for the API layer container and code
           value: master
         - name: BRANCHAUX
+          description: The branch name to use for the Database and Message Queue layer container
           value: master
         - name: BRANCHTEST
+          description: The branch name to use for the end to end testing
           value: master
         - name: ANGULARCLIVERSION
+          description: Angular version to compile frontend
           value: 7.0.3
         - name: DOCKERREG
+          description: The hostname and port number for your private docker registry
           value: dockerreg.conygre.com:5000
         - name: BUILDAUX
+          description: Whether you want to include the Database and Message Queue as part of the build (true for the first build)
           value: "false"
         - name: FECHKURL
+          description: URL to check to ensure frontend is ready and running
           value: /
         - name: APICHKURL
+          description: URL to check to ensure application is ready and running
           value: /api
       jenkinsfile: |-
         pipeline {
