@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Script to build web application container for NAFAL
+
+if [ ! -d webservice ]
+then
+  echo "The directory webservice cannot be found." 1>&2
+  echo "Please make sure you are in the root of this project." 1>&2
+  exit 1
+fi
+
+docker build -t nafal:0.0.1 -f Docker/Dockerfile .
