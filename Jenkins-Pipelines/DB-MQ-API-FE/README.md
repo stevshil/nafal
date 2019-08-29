@@ -113,14 +113,12 @@ openshift-config
 
 The contents of these files should match exactly what is in the ones found in the https://bitbucket.org/stevshil/openshift-templates.git repository under the **openshift-config** directory.
 
-## Creating the pipeline
+# Web service
+
+The web service will create the Jenkins server and pipeline, and will set your desired values as the defaults so that you can simply call;
 
 ```
-oc create -f jenkins-pipeline.yaml
+oc start-build pipeline
 ```
 
-## Launching the pipeline
-
-```
-oc start-build pipeline -e VERSION=1.0.0 -e otherVariable=...
-```
+The web service sends this command after creating Jenkins, so wait for the web service to return to you.

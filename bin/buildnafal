@@ -2,6 +2,14 @@
 
 # Script to build web application container for NAFAL
 
+if (( $# < 1 ))
+then
+  echo "SYNTAX: $x <version>" 1>&2
+  exit 1
+fi
+
+version=$1
+
 if [ ! -d webservice ]
 then
   echo "The directory webservice cannot be found." 1>&2
@@ -9,4 +17,4 @@ then
   exit 1
 fi
 
-docker build -t nafal:0.0.1 -f Docker/Dockerfile .
+docker build -t nafal:${version} -f Docker/Dockerfile .

@@ -1,3 +1,17 @@
 #!/bin/bash
 
-oc patch dc/nafal --patch '{"spec": {"template": {"spec": {"containers": [{"image": "docker.io/steve353/nafal:0.0.1","name": "nafal","imagePullPolicy": "Always"}]}}}}'
+if (( $# < 3 ))
+then
+  echo "SYNTAX: $0 <ocuser> <ocpasswd> <version>" 1>&2
+  exit 1
+fi
+
+for x in dev1 dev2 dev3
+do
+  echo "Setting nafal version $3"
+  oc login --insecure-skip-tls-verify=true -u $1 -p $2 https://${x}.conygre.com:8443
+
+  oc project nafal
+
+  oc patch dc/nafal --patch "{\"spec\": {\"template\": {\"spec\": {\"containers\": [{\"image\": \"docker.io/steve353/nafal:$3\",\"name\": \"nafal\",\"imagePullPolicy\": \"Always\"}]}}}}"
+done

@@ -13,4 +13,4 @@ The Jenkins pipelines will create the development environment pipeline for CI, w
 * api      -> The Java application tier
 * frontend -> Angular built web server
 
-Running the **create-dbapp** script will build a Maven Java Springboot container, and a basic MySQL database unconnected just to show the feature and workings.
+This whole project has now become a web service and is built using the **bin/buildnafal** command.

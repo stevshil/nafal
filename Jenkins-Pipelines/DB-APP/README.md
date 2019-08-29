@@ -8,16 +8,19 @@ In this directory the Jenkins files will build a project with the following pods
 # Jenkins Pipeline for DB-APP
 
 This pipeline will build a 2 tier project consisting of;
+
 * Database Pod
 * API Pod
 
 It is recommended that you have separate GIT repositories for;
+
 * Environment build
 * Database
 * API
 * End-to-end tests
 
 The build is parameterised to make the template repeatable and reusable.  The parameters are;
+
 * PROJECTNAME
   * This is the name of your project in OpenShift, must be unique
 * DOMAINNAME
@@ -85,14 +88,12 @@ openshift-config
 
 The contents of these files should match exactly what is in the ones found in the https://bitbucket.org/stevshil/openshift-templates.git repository under the **openshift-config** directory.
 
-## Creating the pipeline
+# Web service
+
+The web service will create the Jenkins server and pipeline, and will set your desired values as the defaults so that you can simply call;
 
 ```
-oc create -f jenkins-pipeline.yaml
+oc start-build pipeline
 ```
 
-## Launching the pipeline
-
-```
-oc start-build pipeline -e VERSION=1.0.0 -e otherVariable=...
-```
+The web service sends this command after creating Jenkins, so wait for the web service to return to you.
