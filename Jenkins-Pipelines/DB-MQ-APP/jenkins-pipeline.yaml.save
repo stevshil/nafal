@@ -87,29 +87,6 @@ spec:
                             ])
                   }
                 }
-                stage("Create or Update Frontend Deployment Config") {
-                  steps {
-                  dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/Frontend/deploymentConfig.yaml)\"\\" | oc apply -f -'
-                    }
-                  }
-                }
-                stage("Create or updated Frontend Service") {
-                  steps {
-                    dir('environment') {
-                      sh 'oc apply -f openshift-config/Frontend/service.yaml'
-                    }
-                  }
-                }
-                stage("Create Frontend Public route") {
-                  steps {
-                    dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/Frontend/route.yaml)\"\\" | oc apply -f -'
-                      sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}`"'
-                    }
-                  }
-                }
-
                 stage("Create or Update API Deployment Config") {
                   steps {
                   dir('environment') {
