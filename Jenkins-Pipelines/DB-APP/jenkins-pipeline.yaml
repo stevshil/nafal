@@ -63,7 +63,7 @@ spec:
             stage ("Create OpenShift Environment") {
               agent {label 'maven'}
               when {
-                environment name: 'BUILDDB', value: "true"
+                environment name: 'BUILDDB', value: 'true'
               }
               stages {
                 stage("Clone Source") {
@@ -178,7 +178,7 @@ spec:
             stage("Build Database Server") {
               agent {label 'maven'}
               when {
-                environment name: 'BUILDDB', value: "true"
+                environment name: 'BUILDDB', value: 'true'
               }
               stages {
                 stage("Clone Source") {
