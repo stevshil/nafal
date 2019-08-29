@@ -14,9 +14,6 @@ spec:
         - name: GITREPOENV
           description: Git repository URL for the OpenShift templates
           value: https://bitbucket.org/stevshil/openshift-templates.git
-        - name: GITREPOFE
-          description: Git repository URL for your Frontend Application layer
-          value: https://bitbucket.org/stevshil/openshift-angular-app.git
         - name: GITREPOAPI
           description: Git repository URL for your API Application layer
           value: https://bitbucket.org/stevshil/hello-world-spring-boot.git
@@ -35,36 +32,24 @@ spec:
         - name: MQVERSION
           description: The version number for you Message Queue layer container
           value: 0.0.1
-        - name: FRONTENDVERSION
-          description: The version number for you Frontend layer container
-          value: 0.0.1
         - name: BRANCHENV
           description: The branch name to use for the environment
-          value: master
-        - name: BRANCHFE
-          description: The branch name to use for the Frontend layer container and code
           value: master
         - name: BRANCHAPI
           description: The branch name to use for the API layer container and code
           value: master
-        - name: BRANCHAUX
+        - name: BRANCHDB
           description: The branch name to use for the Database and Message Queue layer container
           value: master
         - name: BRANCHTEST
           description: The branch name to use for the end to end testing
           value: master
-        - name: ANGULARCLIVERSION
-          description: Angular version to compile frontend
-          value: 7.0.3
         - name: DOCKERREG
           description: The hostname and port number for your private docker registry
           value: dockerreg.conygre.com:5000
-        - name: BUILDAUX
+        - name: BUILDDB
           description: Whether you want to include the Database and Message Queue as part of the build (true for the first build)
           value: "false"
-        - name: FECHKURL
-          description: URL to check to ensure frontend is ready and running
-          value: /
         - name: APICHKURL
           description: URL to check to ensure application is ready and running
           value: /api
@@ -87,7 +72,7 @@ spec:
             stage ("Create OpenShift Environment") {
               agent {label 'maven'}
               when {
-                environment name: 'BUILDAUX', value: "true"
+                environment name: 'BUILDDB', value: "true"
               }
               stages {
                 stage("Clone Source") {
@@ -196,52 +181,6 @@ spec:
                 }
               }
             }
-            stage ("Build Front End") {
-              agent {label 'nodejs'}
-              stages {
-                stage("Clone Source") {
-                  steps {
-                    checkout([$class: 'GitSCM',
-                                branches: [[name: "*/${BRANCHFE}"]],
-                                extensions: [
-                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'frontend']
-                                ],
-                                userRemoteConfigs: [[url: "${GITREPOFE}"]]
-                            ])
-                  }
-                }
-                stage("Install Angular") {
-                  steps {
-                    dir('frontend') {
-                      sh "npm install -g @angular/cli@${ANGULARCLIVERSION}"
-                    }
-                  }
-                }
-                stage("Angular build") {
-                  steps {
-                    dir('frontend') {
-                      sh 'npm install'
-                      sh 'ng build --prod=true'
-                    }
-                  }
-                }
-                stage("Create Build For Frontend Server") {
-                  steps {
-                    dir('frontend') {
-                      sh 'oc new-build --strategy docker --binary --name frontend --to=${DOCKERREG} --to-docker || echo "Build already exists"'
-                      sh "oc patch bc frontend -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/frontend:${APIVERSION}\"}} }}'"
-                    }
-                  }
-                }
-                stage("Build Frontend Image") {
-                  steps {
-                    dir('frontend') {
-                      sh 'oc start-build frontend --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1)'
-                    }
-                  }
-                }
-              }
-            }
             stage("Build API") {
               agent {label 'maven'}
               stages {
@@ -283,13 +222,13 @@ spec:
             stage("Build Database and Message Queue Servers") {
               agent (label 'maven')
               when {
-                environment name: 'BUILDAUX', value: true
+                environment name: 'BUILDDB', value: true
               }
               stages {
                 stage("Clone Source") {
                   steps {
                     checkout([$class: 'GitSCM',
-                                branches: [[name: "*/${BRANCHAUX}"]],
+                                branches: [[name: "*/${BRANCHDB}"]],
                                 extensions: [
                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'dbmq']
                                 ],

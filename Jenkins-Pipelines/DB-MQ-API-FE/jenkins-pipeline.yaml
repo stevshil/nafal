@@ -47,7 +47,7 @@ spec:
         - name: BRANCHAPI
           description: The branch name to use for the API layer container and code
           value: master
-        - name: BRANCHAUX
+        - name: BRANCHDB
           description: The branch name to use for the Database and Message Queue layer container
           value: master
         - name: BRANCHTEST
@@ -59,7 +59,7 @@ spec:
         - name: DOCKERREG
           description: The hostname and port number for your private docker registry
           value: dockerreg.conygre.com:5000
-        - name: BUILDAUX
+        - name: BUILDDB
           description: Whether you want to include the Database and Message Queue as part of the build (true for the first build)
           value: "false"
         - name: FECHKURL
@@ -87,7 +87,7 @@ spec:
             stage ("Create OpenShift Environment") {
               agent {label 'maven'}
               when {
-                environment name: 'BUILDAUX', value: "true"
+                environment name: 'BUILDDB', value: "true"
               }
               stages {
                 stage("Clone Source") {
@@ -283,13 +283,13 @@ spec:
             stage("Build Database and Message Queue Servers") {
               agent (label 'maven')
               when {
-                environment name: 'BUILDAUX', value: true
+                environment name: 'BUILDDB', value: true
               }
               stages {
                 stage("Clone Source") {
                   steps {
                     checkout([$class: 'GitSCM',
-                                branches: [[name: "*/${BRANCHAUX}"]],
+                                branches: [[name: "*/${BRANCHDB}"]],
                                 extensions: [
                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'dbmq']
                                 ],
