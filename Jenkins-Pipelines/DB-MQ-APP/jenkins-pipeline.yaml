@@ -220,7 +220,7 @@ spec:
               }
             }
             stage("Build Database and Message Queue Servers") {
-              agent (label 'maven')
+              agent {label 'maven'}
               when {
                 environment name: 'BUILDDB', value: true
               }
@@ -269,7 +269,7 @@ spec:
               }
             }
             stage("Test Application") {
-              agent (label 'maven')
+              agent {label 'maven'}
               when {
                 not { environment name: 'GITREPOTEST', value: 'false' }
               }
