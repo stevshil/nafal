@@ -10,7 +10,7 @@ oc get dc --export -o yaml | sed 's/@sha256.*$/:latest/'
 oc get svc --export -o yaml
 
 ## Routes
-oc get routes --export -o yaml | sed "s/DOMAINNAME/NEWDOMAIN/"
+oc get routes --export -o yaml | sed "s/${OLDDOMAINNAME}/${NEWDOMAINNAME}/"
 
 ## Persistent Volumes
 oc get persistentvolumeclaims --export -o yaml

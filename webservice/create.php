@@ -147,10 +147,9 @@ if (array_key_exists("jenkins",$_POST) && array_key_exists("create",$_POST)) {
   // echo "<p><img src='images/loading.gif' height='150' widht='150'>";
   system("oc new-project ".$uservalues['PROJECTNAME']." >/dev/null 2>&1");
   ##system("oc apply -f ".$uservalues['jenkins']." >/dev/null 2>&1 &");
-  system("oc apply -f ".$newjenkins." >/dev/null 2>&1 &");
-  echo "oc apply -f ".$newjenkins;
-  system("rm -f ".$newjenkins);
+  system("oc apply -f ".$newjenkins." 2>&1");
   sleep(150);
+  system("rm -f ".$newjenkins);
   $startCMD="oc start-build pipeline ";
   # The following is no longer required as we set the values in the jenkins file
   #foreach ($_POST as $key => $value) {
