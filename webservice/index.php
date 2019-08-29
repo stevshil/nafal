@@ -13,6 +13,10 @@
 <button onClick="javascript:window.location.href='create.php'">Create new project</button>
 </td></tr>
 <tr><td align='center'>
+<button onClick="javascript:window.location.href='uatprod.php'">Build UAT or PROD environment</button>
+</td></tr>
+<tr><td align='center'>
 <button onClick="javascript:window.location.href='remove.php'">Delete project</button>
 </td></tr>
+</table>
 </html>
