@@ -13,7 +13,7 @@ spec:
           value: dev2.conygre.com
         - name: GITREPOENV
           description: Git repository URL for the OpenShift templates
-          value: https://bitbucket.org/stevshil/openshift-templates.git
+          value: https://bitbucket.org/stevshil/nafal.git
         - name: GITREPOAPI
           description: Git repository URL for your API Application layer
           value: https://bitbucket.org/stevshil/hello-world-spring-boot.git

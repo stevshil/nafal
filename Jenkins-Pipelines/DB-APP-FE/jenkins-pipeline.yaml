@@ -13,7 +13,7 @@ spec:
           value: dev2.conygre.com
         - name: GITREPOENV
           description: Git repository URL for the OpenShift templates
-          value: https://bitbucket.org/stevshil/openshift-templates.git
+          value: https://bitbucket.org/stevshil/nafal.git
         - name: GITREPOFE
           description: Git repository URL for your Frontend Application layer
           value: https://bitbucket.org/stevshil/openshift-angular-app.git
