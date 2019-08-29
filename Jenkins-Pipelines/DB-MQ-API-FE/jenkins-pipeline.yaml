@@ -101,13 +101,6 @@ spec:
                             ])
                   }
                 }
-                stage("Create Frontend image stream") {
-                  steps {
-                    dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/Frontend/imagestream.yaml)\"\\" | oc apply -f -'
-                    }
-                  }
-                }
                 stage("Create or Update Frontend Deployment Config") {
                   steps {
                   dir('environment') {
@@ -131,13 +124,6 @@ spec:
                   }
                 }
 
-                stage("Create API image stream") {
-                  steps {
-                    dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/API/imagestream.yaml)\"\\" | oc apply -f -'
-                    }
-                  }
-                }
                 stage("Create or Update API Deployment Config") {
                   steps {
                   dir('environment') {
@@ -167,14 +153,6 @@ spec:
                       sh 'eval echo \\""\$(cat openshift-config/ActiveMQ/persistentVolume-claim0.yaml)\"\\" | oc apply -f -'
                       sh 'eval echo \\""\$(cat openshift-config/ActiveMQ/persistentVolume-claim1.yaml)\"\\" | oc apply -f -'
                       sh 'eval echo \\""\$(cat openshift-config/MySQL/persistentVolume-claim0.yaml)\"\\" | oc apply -f -'
-                    }
-                  }
-                }
-                stage("Create Image Stream for DB and AMQ") {
-                  steps {
-                    dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/ActiveMQ/imagestream.yaml)\"\\" | oc apply -f -'
-                      sh 'eval echo \\""\$(cat openshift-config/MySQL/imagestream.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }

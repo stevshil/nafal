@@ -8,69 +8,70 @@ spec:
       env:
         - name: PROJECTNAME
           description: Name of the project in OpenShift
+          value: JPROJECTNAME
         - name: DOMAINNAME
           description: The domain name of the OpenShift server
-          value: dev2.conygre.com
+          value: JDOMAINNAME
         - name: GITREPOENV
           description: Git repository URL for the OpenShift templates
-          value: https://bitbucket.org/stevshil/nafal.git
+          value: JGITREPOENV
         - name: GITREPOFE
           description: Git repository URL for your Frontend Application layer
-          value: https://bitbucket.org/stevshil/openshift-angular-app.git
+          value: JGITREPOFE
         - name: GITREPOAPI
           description: Git repository URL for your API Application layer
-          value: https://bitbucket.org/stevshil/hello-world-spring-boot.git
+          value: JGITREPOAPI
         - name: GITREPODB
           description: Git repository URL for your Database layer
-          value: https://bitbucket.org/stevshil/dockerdb.git
+          value: JGITREPODB
         - name: GITREPOTEST
           description: Git repository URL for your end to end tests
-          value: "false"
+          value: "JGITREPOTEST"
         - name: APIVERSION
           description: The version number for your API layer container and code
-          value: 0.0.1
+          value: JAPIVERSION
         - name: DBVERSION
           description: The version number for you Database layer container
-          value: 0.0.1
+          value: JAPIVERSION
         - name: FRONTENDVERSION
           description: The version number for you Frontend layer container
-          value: 0.0.1
+          value: JFRONTENDVERSION
         - name: BRANCHENV
           description: The branch name to use for the environment
-          value: master
+          value: JBRANCHENV
         - name: BRANCHFE
           description: The branch name to use for the Frontend layer container and code
-          value: master
+          value: JBRANCHFE
         - name: BRANCHAPI
           description: The branch name to use for the API layer container and code
-          value: master
+          value: JBRANCHAPI
         - name: BRANCHDB
           description: The branch name to use for the Database layer container
-          value: master
+          value: JBRANCHDB
         - name: BRANCHTEST
           description: The branch name to use for the end to end testing
-          value: master
+          value: JBRANCHTEST
         - name: ANGULARCLIVERSION
           description: Angular version to compile frontend
-          value: 7.0.3
+          value: JANGULARCLIVERSION
         - name: DOCKERREG
           description: The hostname and port number for your private docker registry
-          value: dockerreg.conygre.com:5000
+          value: JDOCKERREG
         - name: BUILDDB
           description: Whether you want to include the Database as part of the build (true for the first build)
-          value: "false"
+          value: "JBUILDDB"
         - name: FECHKURL
           description: URL to check to ensure frontend is ready and running
-          value: /
+          value: JFECHKURL
         - name: APICHKURL
           description: URL to check to ensure application is ready and running
-          value: /api
+          value: JAPICHKURL
         - name: DBMOUNT
           description: Persistent data storage directory within the database container
-          value: /var/lib/mysql
+          value: JDBMOUNT
         - name: MYSQLROOTPW
           description: Root password for MySQL
-          value: root
+          value: JMYSQLROOTPW
       jenkinsfile: |-
         pipeline {
           agent none

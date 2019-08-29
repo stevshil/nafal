@@ -57,8 +57,6 @@ foreach ($buildType as $type) {
 }
 ?>
 <?php
-# See https://symfony.com/doc/current/components/yaml.html
-use Symfony\Component\Yaml\Yaml;
 # Now get the fields and properties to display to the user
 if (array_key_exists("jenkins",$_POST) && ! array_key_exists("get_type",$_POST) && ! array_key_exists("create",$_POST)) {
   echo "<tr><td colspan=2>&nbsp;</td></tr>";
@@ -120,6 +118,13 @@ if (array_key_exists("jenkins",$_POST) && array_key_exists("create",$_POST)) {
       exit(1);
     }
   }
+  # Create temporary jenkins file with the default values set as passed, so we can start-build without changing parameters
+  $newjenkins="/tmp/jenkins-".strval(uniqid());
+  foreach ( array_keys($uservalues) as $key ) {
+    $sedptn="{$sedptn} -e 's,J{$key},".$uservalues[$key].",g' ";
+  }
+  system("sed {$sedptn} ".$uservalues["jenkins"].".save > {$newjenkins}");
+  echo "Jenkins file created";
   system(
     "oc login --insecure-skip-tls-verify=true -u ".$uservalues['ocuser']." -p ".$uservalues['ocpasswd']." https://".$uservalues['DOMAINNAME'].":8443 >/dev/null 2>&1;
     oc get project | grep ".$uservalues['PROJECTNAME']." >/dev/null 2>&1",$exitStatus
@@ -141,14 +146,18 @@ if (array_key_exists("jenkins",$_POST) && array_key_exists("create",$_POST)) {
   // echo "<p>Waiting for Jenkins to start...</p>";
   // echo "<p><img src='images/loading.gif' height='150' widht='150'>";
   system("oc new-project ".$uservalues['PROJECTNAME']." >/dev/null 2>&1");
-  system("oc apply -f ".$uservalues['jenkins']." >/dev/null 2>&1 &");
+  ##system("oc apply -f ".$uservalues['jenkins']." >/dev/null 2>&1 &");
+  system("oc apply -f ".$newjenkins." >/dev/null 2>&1 &");
+  echo "oc apply -f ".$newjenkins;
+  system("rm -f ".$newjenkins);
   sleep(150);
   $startCMD="oc start-build pipeline ";
-  foreach ($_POST as $key => $value) {
-    if ( $value != NULL && $key != "create" && $key != "jenkins" && $key != "ocuser" && $key != "ocpasswd") {
-      $startCMD="$startCMD -e $key=$value ";
-    }
-  }
+  # The following is no longer required as we set the values in the jenkins file
+  #foreach ($_POST as $key => $value) {
+  #  if ( $value != NULL && $key != "create" && $key != "jenkins" && $key != "ocuser" && $key != "ocpasswd") {
+  #    $startCMD="$startCMD -e $key=$value ";
+  #  }
+  #}
   system("$startCMD");
   echo "<p>Pipeline started</p>";
 }

@@ -8,69 +8,55 @@ spec:
       env:
         - name: PROJECTNAME
           description: Name of the project in OpenShift
+          value: JPROJECTNAME
         - name: DOMAINNAME
           description: The domain name of the OpenShift server
-          value: dev2.conygre.com
+          value: JDOMAINNAME
         - name: GITREPOENV
           description: Git repository URL for the OpenShift templates
-          value: https://bitbucket.org/stevshil/nafal.git
-        - name: GITREPOFE
-          description: Git repository URL for your Frontend Application layer
-          value: https://bitbucket.org/stevshil/openshift-angular-app.git
+          value: JGITREPOENV
         - name: GITREPOAPI
           description: Git repository URL for your API Application layer
-          value: https://bitbucket.org/stevshil/hello-world-spring-boot.git
+          value: JGITREPOAPI
         - name: GITREPODB
           description: Git repository URL for your Database layer
-          value: https://bitbucket.org/stevshil/dockerdb.git
+          value: JGITREPODB
         - name: GITREPOTEST
           description: Git repository URL for your end to end tests
-          value: "false"
+          value: "JGITREPOTEST"
         - name: APIVERSION
           description: The version number for your API layer container and code
-          value: 0.0.1
+          value: JAPIVERSION
         - name: DBVERSION
           description: The version number for you Database layer container
-          value: 0.0.1
-        - name: FRONTENDVERSION
-          description: The version number for you Frontend layer container
-          value: 0.0.1
+          value: JDBVERSION
         - name: BRANCHENV
           description: The branch name to use for the environment
-          value: master
-        - name: BRANCHFE
-          description: The branch name to use for the Frontend layer container and code
-          value: master
+          value: JBRANCHENV
         - name: BRANCHAPI
           description: The branch name to use for the API layer container and code
-          value: master
+          value: JBRANCHAPI
         - name: BRANCHDB
           description: The branch name to use for the Database layer container
-          value: master
+          value: JBRANCHDB
         - name: BRANCHTEST
           description: The branch name to use for the end to end testing
-          value: master
-        - name: ANGULARCLIVERSION
-          description: Angular version to compile frontend
-          value: 7.0.3
+          value: JBRANCHTEST
         - name: DOCKERREG
           description: The hostname and port number for your private docker registry
-          value: dockerreg.conygre.com:5000
+          value: JDOCKERREG
         - name: BUILDDB
           description: Whether you want to include the Database as part of the build (true for the first build)
-          value: "false"
-        - name: FECHKURL
-          description: URL to check to ensure frontend is ready and running
-          value: /
+          value: "JBUILDDB"
         - name: APICHKURL
           description: URL to check to ensure application is ready and running
-          value: /api
+          value: JAPICHKURL
         - name: DBMOUNT
           description: Persistent data storage directory within the database container
-          value: /var/lib/mysql
+          value: JDBMOUNT
         - name: MYSQLROOTPW
           description: Root password for MySQL
-          value: root
+          value: JMYSQLROOTPW
       jenkinsfile: |-
         pipeline {
           agent none
@@ -92,29 +78,6 @@ spec:
                             ])
                   }
                 }
-                stage("Create or Update Frontend Deployment Config") {
-                  steps {
-                  dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/Frontend/deploymentConfig.yaml)\"\\" | oc apply -f -'
-                    }
-                  }
-                }
-                stage("Create or updated Frontend Service") {
-                  steps {
-                    dir('environment') {
-                      sh 'oc apply -f openshift-config/Frontend/service.yaml'
-                    }
-                  }
-                }
-                stage("Create Frontend Public route") {
-                  steps {
-                    dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/Frontend/route.yaml)\"\\" | oc apply -f -'
-                      sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}`"'
-                    }
-                  }
-                }
-
                 stage("Create or Update API Deployment Config") {
                   steps {
                   dir('environment') {
@@ -161,52 +124,6 @@ spec:
                 }
               }
             }
-            stage ("Build Front End") {
-              agent {label 'nodejs'}
-              stages {
-                stage("Clone Source") {
-                  steps {
-                    checkout([$class: 'GitSCM',
-                                branches: [[name: "*/${BRANCHFE}"]],
-                                extensions: [
-                                  [$class: 'RelativeTargetDirectory', relativeTargetDir: 'frontend']
-                                ],
-                                userRemoteConfigs: [[url: "${GITREPOFE}"]]
-                            ])
-                  }
-                }
-                stage("Install Angular") {
-                  steps {
-                    dir('frontend') {
-                      sh "npm install -g @angular/cli@${ANGULARCLIVERSION}"
-                    }
-                  }
-                }
-                stage("Angular build") {
-                  steps {
-                    dir('frontend') {
-                      sh 'npm install'
-                      sh 'ng build --prod=true'
-                    }
-                  }
-                }
-                stage("Create Build For Frontend Server") {
-                  steps {
-                    dir('frontend') {
-                      sh 'oc new-build --strategy docker --binary --name frontend --to=${DOCKERREG} --to-docker || echo "Build already exists"'
-                      sh "oc patch bc frontend -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/frontend:${APIVERSION}\"}} }}'"
-                    }
-                  }
-                }
-                stage("Build Frontend Image") {
-                  steps {
-                    dir('frontend') {
-                      sh 'oc start-build frontend --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1)'
-                    }
-                  }
-                }
-              }
-            }
             stage("Build API") {
               agent {label 'maven'}
               stages {
@@ -236,7 +153,7 @@ spec:
                     }
                   }
                 }
-                stage("Build API Server Image") {
+                stage("Build api Server Image") {
                   steps {
                     dir('api') {
                       sh 'oc start-build api --from-dir . --follow --wait=true || (echo "BUILD FAILED" && exit 1)'

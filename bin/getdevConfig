@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Script to grab the YAML configuration from the current Development environment to build the new one
+
+# We will need to get the following;
+## Deployment config (dc)
+oc get dc --export -o yaml | sed 's/@sha256.*$/:latest/'
+
+## Services (svc)
+oc get svc --export -o yaml
+
+## Routes
+oc get routes --export -o yaml | sed "s/DOMAINNAME/NEWDOMAIN/"
+
+## Persistent Volumes
+oc get persistentvolumeclaims --export -o yaml

@@ -77,13 +77,6 @@ spec:
                             ])
                   }
                 }
-                stage("Create API image stream") {
-                  steps {
-                    dir('environment') {
-                      sh 'eval echo \\"\"$(cat openshift-config/API/imagestream.yaml)\"\\" | oc apply -f -'
-                    }
-                  }
-                }
                 stage("Create or Update API Deployment Config") {
                   steps {
                   dir('environment') {
@@ -111,13 +104,6 @@ spec:
                   steps {
                     dir('environment') {
                       sh 'eval echo \\""\$(cat openshift-config/MySQL/persistentVolume-claim0.yaml)\"\\" | oc apply -f -'
-                    }
-                  }
-                }
-                stage("Create Image Stream for DB") {
-                  steps {
-                    dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/MySQL/imagestream.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
