@@ -66,9 +66,15 @@ spec:
         - name: FECHKURL
           description: URL to check to ensure frontend is ready and running
           value: JFECHKURL
-        - name: APICHKURL
+        - name: JFEPORT
+          description: Port number container is listening on
+          value: 80
+        - name: JAPICHKURL
           description: URL to check to ensure application is ready and running
           value: JAPICHKURL
+        - name: JAPIPORT
+          description: Port number container is listening on
+          value: 8080
         - name: AMQMOUNT0
           description: Persistent data storage directory within the container for Message Queue
           value: JAMQMOUNT0

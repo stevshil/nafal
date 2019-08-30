@@ -62,9 +62,15 @@ spec:
         - name: FECHKURL
           description: URL to check to ensure frontend is ready and running
           value: /
+        - name: FEPORT
+          description: Port number container is listening on
+          value: 80
         - name: APICHKURL
           description: URL to check to ensure application is ready and running
           value: /api
+        - name: APIPORT
+          description: Port number container is listening on
+          value: 8080
         - name: DBMOUNT
           description: Persistent data storage directory within the database container
           value: /var/lib/mysql

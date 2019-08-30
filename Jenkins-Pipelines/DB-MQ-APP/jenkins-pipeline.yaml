@@ -53,6 +53,9 @@ spec:
         - name: APICHKURL
           description: URL to check to ensure application is ready and running
           value: /api
+        - name: APIPORT
+          description: Port number container is listening on
+          value: 80
         - name: AMQMOUNT0
           description: Persistent data storage directory within the container for Message Queue
           value: /data/activemq
@@ -110,7 +113,7 @@ spec:
                 stage("Create API Public route") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/API/route.yaml)\"\\" | oc apply -f -'
+                      sh 'eval echo \\""\$(cat openshift-config/API/routefe.yaml)\"\\" | oc apply -f -'
                       sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}`"'
                     }
                   }

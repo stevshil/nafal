@@ -5,7 +5,7 @@ body {text-align: center}
 <?php
 # Required fields
 $required=array("PROJECTNAME","DOMAINNAME","ocuser","ocpasswd");
-$chkfields=array("PROJECTNAME","DOMAINNAME","DOCKERREG","FRONTENDVERSION","FECHKURL","APIVERSION","APICHKURL","MQVERSION","AMQMOUNT0","AMQMOUNT1","DBVERSION","DBMOUNT","MYSQLROOTPW");
+$chkfields=array("PROJECTNAME","DOMAINNAME","DOCKERREG","FRONTENDVERSION","FECHKURL","APIVERSION","APICHKURL","MQVERSION","AMQMOUNT0","AMQMOUNT1","DBVERSION","DBMOUNT","MYSQLROOTPW","FEPORT","APIPORT");
 header('Content-Encoding: none'); // Disable gzip compression
 ob_implicit_flush(true); // Implicit flush at each output command
 ?>

@@ -51,6 +51,9 @@ spec:
         - name: APICHKURL
           description: URL to check to ensure application is ready and running
           value: JAPICHKURL
+        - name: JAPIPORT
+          description: Port number container is listening on
+          value: 8080
         - name: DBMOUNT
           description: Persistent data storage directory within the database container
           value: JDBMOUNT
@@ -95,7 +98,7 @@ spec:
                 stage("Create API Public route") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/API/route.yaml)\"\\" | oc apply -f -'
+                      sh 'eval echo \\""\$(cat openshift-config/API/routefe.yaml)\"\\" | oc apply -f -'
                       sh 'echo "Internet route is `oc get route | awk \'{print $2}\' | grep ${PROJECTNAME}`"'
                     }
                   }

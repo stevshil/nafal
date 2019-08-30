@@ -4,7 +4,6 @@ metadata:
   name: api
 spec:
   host: ${PROJECTNAME}.${DOMAINNAME}
-  path: /api
   port:
     targetPort: '${APIPORT}'
   to:
