@@ -54,9 +54,9 @@ spec:
         - name: APICHKURL
           description: URL to check to ensure application is ready and running
           value: JAPICHKURL
-        - name: JAPIPORT
+        - name: APIPORT
           description: Port number container is listening on
-          value: 80
+          value: "JAPIPORT"
         - name: AMQMOUNT0
           description: Persistent data storage directory within the container for Message Queue
           value: JAMQMOUNT0
@@ -69,6 +69,9 @@ spec:
         - name: MYSQLROOTPW
           description: Root password for MySQL
           value: JMYSQLROOTPW
+        - name: MAVENOPTIONS
+          description: Options to supply to mvn to build your project and test
+          value: JMAVENOPTIONS
       jenkinsfile: |-
         pipeline {
           agent none
@@ -100,7 +103,7 @@ spec:
                 stage("Create or updated API Service") {
                   steps {
                     dir('environment') {
-                      sh 'oc apply -f openshift-config/API/service.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/API/service.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
@@ -133,8 +136,8 @@ spec:
                 stage("Create Services for DB and AMQ") {
                   steps {
                     dir('environment') {
-                      sh 'oc apply -f openshift-config/MySQL/service.yaml'
-                      sh 'oc apply -f openshift-config/ActiveMQ/service.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/service.yaml)\"\"" | oc apply -f -'
+                      sh 'eval echo \\""\$(cat openshift-config/ActiveMQ/service.yaml)\"\"" | oc apply -f -'
                     }
                   }
                 }
@@ -157,7 +160,7 @@ spec:
                 stage("Build JAR") {
                   steps {
                     dir('api') {
-                      sh 'mvn -Dmaven.test.skip=true clean package'
+                      sh 'mvn ${MAVENOPTIONS}'
                     }
                   }
                 }

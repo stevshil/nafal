@@ -24,12 +24,12 @@ spec:
       - image: ${DOCKERREG}/${PROJECTNAME}/frontend:${FRONTENDVERSION}
         name: frontend
         ports:
-        - containerPort: 80
+        - containerPort: ${FEPORT}
         readinessProbe:
           failureThreshold: 3
           httpGet:
             path: ${FECHKURL}
-            port: 80
+            port: ${FEPORT}
             scheme: HTTP
           initialDelaySeconds: 15
           periodSeconds: 30

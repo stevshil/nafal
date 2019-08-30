@@ -52,13 +52,16 @@ spec:
           value: /
         - name: APIPORT
           description: Port number container is listening on
-          value: 8080
+          value: "8080"
         - name: DBMOUNT
           description: Persistent data storage directory within the database container
           value: /var/lib/mysql
         - name: MYSQLROOTPW
           description: Root password for MySQL
           value: root
+        - name: MAVENOPTIONS
+          description: Options to supply to mvn to build your project and test
+          value: -Dmaven.test.skip=true clean package
       jenkinsfile: |-
         pipeline {
           agent none
@@ -90,7 +93,7 @@ spec:
                 stage("Create or updated API Service") {
                   steps {
                     dir('environment') {
-                      sh 'oc apply -f openshift-config/API/service.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/API/service.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
@@ -120,7 +123,7 @@ spec:
                 stage("Create Services for DB") {
                   steps {
                     dir('environment') {
-                      sh 'oc apply -f openshift-config/MySQL/service.yaml'
+                      sh 'eval echo \\""\$(cat openshift-config/MySQL/service.yaml)\"\\" | oc apply -f -'
                     }
                   }
                 }
@@ -143,7 +146,7 @@ spec:
                 stage("Build JAR") {
                   steps {
                     dir('api') {
-                      sh 'mvn -Dmaven.test.skip=true clean package'
+                      sh 'mvn ${MAVENOPTIONS}'
                     }
                   }
                 }

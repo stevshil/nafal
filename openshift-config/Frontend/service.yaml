@@ -6,9 +6,9 @@ metadata:
   name: frontend
 spec:
   ports:
-  - name: "80"
-    port: 80
-    targetPort: 80
+  - name: "${FEPORT}"
+    port: ${FEPORT}
+    targetPort: ${FEPORT}
   selector:
     io.kompose.service: frontend
 status:

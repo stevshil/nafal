@@ -14,3 +14,35 @@ The Jenkins pipelines will create the development environment pipeline for CI, w
 * frontend -> Angular built web server
 
 This whole project has now become a web service and is built using the **bin/buildnafal** command.
+
+# Application specifics
+
+Each of the 4 templates has some specifics which are built in, such as names of the hosts, and directory locations.
+
+The following list is created as;
+* Jenkins-Pipeline name (nafal name in select list)
+
+* DB-APP (Database, Application)
+* DB-APP-FE (Database, Application, Frontend)
+* DB-MQ-APP (Database, MessageQueue, Application)
+* DB-MQ-API-FE (Database, MessageQueue, Applicaion, Frontend)
+
+## For all
+
+* Message Queue server
+  * hostname **activemq**
+  * exposes ports 8161 and 61616
+  * public route activemq._server_
+* Database server
+  * hostname **mysql**
+  * exposes port 3306
+* API or Application server
+  * hostname **api**
+  * exposes port 8080 by default
+* Frontend server
+  * hostname **frontend**
+  * exposes port 80 by default
+
+## DB-APP
+
+No special requirements in this

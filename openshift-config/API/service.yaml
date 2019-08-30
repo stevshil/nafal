@@ -6,9 +6,9 @@ metadata:
   name: api
 spec:
   ports:
-  - name: "8080"
-    port: 8080
-    targetPort: 8080
+  - name: "${APIPORT}"
+    port: ${APIPORT}
+    targetPort: ${APIPORT}
   selector:
     io.kompose.service: api
 status:

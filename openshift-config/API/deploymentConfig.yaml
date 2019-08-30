@@ -25,12 +25,12 @@ spec:
         imagePullPolicy: IfNotPresent
         name: api
         ports:
-        - containerPort: 8080
+        - containerPort: ${APIPORT}
         readinessProbe:
           failureThreshold: 3
           httpGet:
             path: ${APICHKURL}
-            port: 8080
+            port: ${APIPORT}
             scheme: HTTP
           initialDelaySeconds: 60
           periodSeconds: 30
