@@ -6,7 +6,7 @@ metadata:
   name: api
 spec:
   ports:
-  - name: "${APIPORT}"
+  - name: \"${APIPORT}\"
     port: ${APIPORT}
     targetPort: ${APIPORT}
   selector:

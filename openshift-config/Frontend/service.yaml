@@ -6,7 +6,7 @@ metadata:
   name: frontend
 spec:
   ports:
-  - name: "${FEPORT}"
+  - name: \"${FEPORT}\"
     port: ${FEPORT}
     targetPort: ${FEPORT}
   selector:
