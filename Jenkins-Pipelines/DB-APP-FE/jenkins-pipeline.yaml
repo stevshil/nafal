@@ -164,7 +164,7 @@ spec:
                 stage("Create Services for DB") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \\""\$(cat  openshift-config/MySQL/service.yaml)\"\\" | oc apply -f -'
+                      sh 'oc apply -f openshift-config/MySQL/service.yaml'
                     }
                   }
                 }

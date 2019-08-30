@@ -6,10 +6,10 @@ metadata:
   name: activemq
 spec:
   ports:
-  - name: \"61616\"
+  - name: "61616"
     port: 61616
     targetPort: 61616
-  - name: \"8161\"
+  - name: "8161"
     port: 8161
     targetPort: 8161
   selector:

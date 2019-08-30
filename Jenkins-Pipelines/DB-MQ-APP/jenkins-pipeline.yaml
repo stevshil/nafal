@@ -150,8 +150,8 @@ spec:
                 stage("Create Services for DB and AMQ") {
                   steps {
                     dir('environment') {
-                      sh 'eval echo \\""\$(cat openshift-config/MySQL/service.yaml)\"\\" | oc apply -f -'
-                      sh 'eval echo \\""\$(cat openshift-config/ActiveMQ/service.yaml)\"\\" | oc apply -f -'
+                      sh 'oc apply -f openshift-config/MySQL/service.yaml'
+                      sh 'oc apply -f openshift-config/ActiveMQ/service.yaml'
                     }
                   }
                 }
