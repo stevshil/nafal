@@ -5,7 +5,7 @@
 # Just deploys the framework, as the dockerreg will have the container versions
 # uDeploy will then be used for container version deployments
 
-echo "DOCKERREG: $DOCKERREG<br><br>"
+echo "<br>DOCKERREG: $DOCKERREG<br><br>"
 # Log on to OpenShift server
 oc login --insecure-skip-tls-verify=true -u ${ocuser} -p ${ocpasswd} https://${DOMAINNAME}:8443 >/dev/null 2>&1
 if ! oc get project | grep ${PROJECTNAME} >/dev/null 2>&1
@@ -111,10 +111,13 @@ then
   echo "<br>API service config failed<br>"
   exit 2
 fi
-echo "Creating API route configuration<br>"
-if [[ -n $FRONTENDVERSION ]]
+echo "<br>Creating API route configuration<br>"
+if [[ -n "$FRONTENDVERSION" ]]
+then
+  echo "Using API routing"
   eval echo \""$(cat ../openshift-config/API/route.yaml)\"" | oc apply -f - 2>&1
 else
+  echo "Using frontend routing for App"
   eval echo \""$(cat ../openshift-config/API/routefe.yaml)\"" | oc apply -f - 2>&1
 fi
 if (( $? > 0 ))
