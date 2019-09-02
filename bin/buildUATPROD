@@ -25,7 +25,7 @@ then
     exit 1
   fi
   echo "Creating frontend service configuration<br>"
-  oc apply -f ../openshift-config/Frontend/service.yaml 2>&1
+  eval echo \"$(cat ../openshift-config/Frontend/service.yaml)\" | oc apply -f -  2>&1
   if (( $? > 0 ))
   then
     echo "<br>FE service config failed<br>"
@@ -50,7 +50,7 @@ then
   exit 1
 fi
 echo "Creating API service configuration<br>"
-oc apply -f ../openshift-config/API/service.yaml 2>&1
+eva echo \""$(cat ../openshift-config/API/service.yaml)\"" | oc apply -f - 2>&1
 if (( $? > 0 ))
 then
   echo "<br>API service config failed<br>"
@@ -89,7 +89,7 @@ then
     exit 1
   fi
   echo "Creating MQ service configuration<br>"
-  oc apply -f ../openshift-config/ActiveMQ/service.yaml 2>&1
+  eval echo \""$(cat ../openshift-config/ActiveMQ/service.yaml)\"" | oc apply -f - 2>&1
   if (( $? > 0 ))
   then
     echo "<br>MQ service config failed<br>"
@@ -113,7 +113,7 @@ then
   exit 1
 fi
 echo "Creating DB service configuration<br>"
-oc apply -f ../openshift-config/MySQL/service.yaml 2>&1
+eval echo \""$(cat ../openshift-config/MySQL/service.yaml)\"" | oc apply -f - 2>&1
 if (( $? > 0 ))
 then
   echo "<br>DB service config failed<br>"
