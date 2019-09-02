@@ -89,7 +89,7 @@ then
     exit 1
   fi
   echo "Creating MQ service configuration<br>"
-  eval echo \""$(cat ../openshift-config/ActiveMQ/service.yaml)\"" | oc apply -f - 2>&1
+  oc apply -f ../openshift-config/ActiveMQ/service.yaml 2>&1
   if (( $? > 0 ))
   then
     echo "<br>MQ service config failed<br>"
@@ -113,7 +113,7 @@ then
   exit 1
 fi
 echo "Creating DB service configuration<br>"
-eval echo \""$(cat ../openshift-config/MySQL/service.yaml)\"" | oc apply -f - 2>&1
+ oc apply -f ../openshift-config/MySQL/service.yaml 2>&1
 if (( $? > 0 ))
 then
   echo "<br>DB service config failed<br>"
