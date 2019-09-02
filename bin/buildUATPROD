@@ -50,7 +50,7 @@ then
   exit 1
 fi
 echo "Creating API service configuration<br>"
-eva echo \""$(cat ../openshift-config/API/service.yaml)\"" | oc apply -f - 2>&1
+eval echo \""$(cat ../openshift-config/API/service.yaml)\"" | oc apply -f - 2>&1
 if (( $? > 0 ))
 then
   echo "<br>API service config failed<br>"
