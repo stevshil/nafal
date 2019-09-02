@@ -55,7 +55,7 @@ spec:
           value: /api
         - name: APIPORT
           description: Port number container is listening on
-          value: "80"
+          value: 80
         - name: AMQMOUNT0
           description: Persistent data storage directory within the container for Message Queue
           value: /data/activemq
