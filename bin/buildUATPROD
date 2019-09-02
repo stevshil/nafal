@@ -14,6 +14,61 @@ then
   echo "<br>"
 fi
 
+# Database
+echo "Creating DB persistent storage<br>"
+eval echo \""$(cat ../openshift-config/MySQL/persistentVolume-claim0.yaml)\"" | oc apply -f - 2>&1
+if (( $? > 0 ))
+then
+  echo "<br>DB storage failed<br>"
+  exit 5
+fi
+echo "Creating DB deployment configuration<br>"
+eval echo \""$(cat ../openshift-config/MySQL/deploymentConfig.yaml)\"" | oc apply -f - 2>&1
+if (( $? > 0 ))
+then
+  echo "<br>DB deployment config failed<br>"
+  exit 1
+fi
+echo "Creating DB service configuration<br>"
+ oc apply -f ../openshift-config/MySQL/service.yaml 2>&1
+if (( $? > 0 ))
+then
+  echo "<br>DB service config failed<br>"
+  exit 2
+fi
+
+# Message Queue/Broker
+if [[ -n "$MQVERSION" ]]
+then
+  echo "Creating persistent storage for MQ<br>"
+  eval echo \""$(cat ../openshift-config/ActiveMQ/persistentVolume-claim0.yaml)\"" | oc apply -f - 2>&1
+  if (( $? > 0 ))
+  then
+    echo "<br>MQ storage failed<br>"
+    exit 5
+  fi
+  eval echo \""$(cat ../openshift-config/ActiveMQ/persistentVolume-claim1.yaml)\"" | oc apply -f - 2>&1
+  if (( $? > 0 ))
+  then
+    echo "<br>MQ storage failed<br>"
+    exit 5
+  fi
+  echo "Creating MQ deployment configuration<br>"
+  eval echo \""$(cat ../openshift-config/ActiveMQ/deploymentConfig.yaml)\"" | oc apply -f - 2>&1
+  if (( $? > 0 ))
+  then
+    echo "<br>MQ deployment config failed<br>"
+    exit 1
+  fi
+  echo "Creating MQ service configuration<br>"
+  oc apply -f ../openshift-config/ActiveMQ/service.yaml 2>&1
+  if (( $? > 0 ))
+  then
+    echo "<br>MQ service config failed<br>"
+    exit 2
+  fi
+fi
+
 # Front end
 if [[ -n $FRONTENDVERSION ]]
 then
@@ -68,58 +123,3 @@ then
   exit 3
 fi
 echo "<br>API Internet route is `oc get route | awk '{print $2}' | grep ${PROJECTNAME}`<br>"
-
-# Message Queue/Broker
-if [[ -n "$MQVERSION" ]]
-then
-  echo "Creating persistent storage for MQ<br>"
-  eval echo \""$(cat ../openshift-config/ActiveMQ/persistentVolume-claim0.yaml)\"" | oc apply -f - 2>&1
-  if (( $? > 0 ))
-  then
-    echo "<br>MQ storage failed<br>"
-    exit 5
-  fi
-  eval echo \""$(cat ../openshift-config/ActiveMQ/persistentVolume-claim1.yaml)\"" | oc apply -f - 2>&1
-  if (( $? > 0 ))
-  then
-    echo "<br>MQ storage failed<br>"
-    exit 5
-  fi
-  echo "Creating MQ deployment configuration<br>"
-  eval echo \""$(cat ../openshift-config/ActiveMQ/deploymentConfig.yaml)\"" | oc apply -f - 2>&1
-  if (( $? > 0 ))
-  then
-    echo "<br>MQ deployment config failed<br>"
-    exit 1
-  fi
-  echo "Creating MQ service configuration<br>"
-  oc apply -f ../openshift-config/ActiveMQ/service.yaml 2>&1
-  if (( $? > 0 ))
-  then
-    echo "<br>MQ service config failed<br>"
-    exit 2
-  fi
-fi
-
-# Database
-echo "Creating DB persistent storage<br>"
-eval echo \""$(cat ../openshift-config/MySQL/persistentVolume-claim0.yaml)\"" | oc apply -f - 2>&1
-if (( $? > 0 ))
-then
-  echo "<br>DB storage failed<br>"
-  exit 5
-fi
-echo "Creating DB deployment configuration<br>"
-eval echo \""$(cat ../openshift-config/MySQL/deploymentConfig.yaml)\"" | oc apply -f - 2>&1
-if (( $? > 0 ))
-then
-  echo "<br>DB deployment config failed<br>"
-  exit 1
-fi
-echo "Creating DB service configuration<br>"
- oc apply -f ../openshift-config/MySQL/service.yaml 2>&1
-if (( $? > 0 ))
-then
-  echo "<br>DB service config failed<br>"
-  exit 2
-fi
