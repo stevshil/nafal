@@ -274,7 +274,7 @@ spec:
                 }
                 stage("Create Build For Database Server") {
                   steps {
-                    dir('db') {
+                    dir('db/db') {
                       sh 'oc new-build --strategy docker --binary --name mysql --to=${DOCKERREG} --to-docker || echo "Build already exists"'
                       sh "oc patch bc mysql -p '{\"spec\":{\"output\": {\"to\": {\"kind\": \"DockerImage\", \"name\": \"${DOCKERREG}/${PROJECTNAME}/mysql:${DBVERSION}\"}} }}'"
                     }
@@ -282,7 +282,7 @@ spec:
                 }
                 stage("Build Database Image") {
                   steps {
-                    dir('db') {
+                    dir('db/db') {
                       sh 'oc start-build mysql --from-dir . --follow --wait=true'
                     }
                   }

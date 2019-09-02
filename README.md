@@ -27,7 +27,7 @@ The following list is created as;
 * DB-MQ-APP (Database, MessageQueue, Application)
 * DB-MQ-API-FE (Database, MessageQueue, Applicaion, Frontend)
 
-## For all
+## GIT repository layouts
 
 * Message Queue server
   * hostname **activemq**
@@ -43,6 +43,8 @@ The following list is created as;
   * hostname **frontend**
   * exposes port 80 by default
 
-## DB-APP
+The Database configuration can be within the same project as your API or Frontend GIT repository as it **requires** the Database code to be inside a **db** directory off of the root of your GIT repository.  If your Database is in a separate repository it will still need a **db** directory.
 
-No special requirements in this
+If you are using a Message Queue/Broker then that **must be** inside a directory called **mq**.  This can be in any of the GIT repositories.
+
+The application code for API/APP or Frontend **must be** in the root of the GIT repository.
