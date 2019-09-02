@@ -57,7 +57,11 @@ then
   exit 2
 fi
 echo "Creating API route configuration<br>"
-eval echo \""$(cat ../openshift-config/API/route.yaml)\"" | oc apply -f - 2>&1
+if [[ -n $FRONTENDVERSION ]]
+  eval echo \""$(cat ../openshift-config/API/route.yaml)\"" | oc apply -f - 2>&1
+else
+  eval echo \""$(cat ../openshift-config/API/routefe.yaml)\"" | oc apply -f - 2>&1
+fi
 if (( $? > 0 ))
 then
   echo "<br>API route config failed<br>"
