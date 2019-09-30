@@ -6,7 +6,7 @@ then
   exit 1
 fi
 
-for x in dev1 dev2 dev3
+for x in dev1 uat appsrvprod
 do
   echo "Setting nafal version $3"
   oc login --insecure-skip-tls-verify=true -u $1 -p $2 https://${x}.conygre.com:8443
