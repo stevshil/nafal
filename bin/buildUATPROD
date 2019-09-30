@@ -11,6 +11,8 @@ oc login --insecure-skip-tls-verify=true -u ${ocuser} -p ${ocpasswd} https://${D
 if ! oc get project | grep ${PROJECTNAME} >/dev/null 2>&1
 then
   oc new-project ${PROJECTNAME}
+  oc create serviceaccount useroot
+  oc adm policy add-scc-to-user anyuid -z useroot -n ${PROJECTNAME}
   echo "<br>"
 fi
 
@@ -24,6 +26,7 @@ then
 fi
 echo "Creating DB deployment configuration<br>"
 eval echo \""$(cat ../openshift-config/MySQL/deploymentConfig.yaml)\"" | oc apply -f - 2>&1
+oc patch dc/mysql --patch '{"spec":{"template":{"spec":{"serviceAccountName": "useroot"}}}}'
 if (( $? > 0 ))
 then
   echo "<br>DB deployment config failed<br>"
@@ -55,6 +58,7 @@ then
   fi
   echo "Creating MQ deployment configuration<br>"
   eval echo \""$(cat ../openshift-config/ActiveMQ/deploymentConfig.yaml)\"" | oc apply -f - 2>&1
+  oc patch dc/activemq --patch '{"spec":{"template":{"spec":{"serviceAccountName": "useroot"}}}}'
   if (( $? > 0 ))
   then
     echo "<br>MQ deployment config failed<br>"
@@ -81,6 +85,7 @@ then
   fi
   echo "Creating frontend service configuration<br>"
   eval echo \"$(cat ../openshift-config/Frontend/service.yaml)\" | oc apply -f -  2>&1
+  oc patch dc/frontend --patch '{"spec":{"template":{"spec":{"serviceAccountName": "useroot"}}}}'
   if (( $? > 0 ))
   then
     echo "<br>FE service config failed<br>"
@@ -99,6 +104,7 @@ fi
 # API
 echo "Creating API deployment configuration<br>"
 eval echo \""$(cat ../openshift-config/API/deploymentConfig.yaml)\"" | oc apply -f - 2>&1
+oc patch dc/api --patch '{"spec":{"template":{"spec":{"serviceAccountName": "useroot"}}}}'
 if (( $? > 0 ))
 then
   echo "<br>API deployment config failed<br>"
