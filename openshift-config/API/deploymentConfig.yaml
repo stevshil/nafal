@@ -19,6 +19,7 @@ spec:
       creationTimestamp: null
       labels:
         io.kompose.service: api
+        openshift.io/scc: privileged
     spec:
       containers:
       - image: ${DOCKERREG}/${PROJECTNAME}/api:${APIVERSION}

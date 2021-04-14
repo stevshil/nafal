@@ -16,6 +16,7 @@ spec:
       creationTimestamp: null
       labels:
         io.kompose.service: mysql
+        openshift.io/scc: privileged
     spec:
       containers:
       - args:

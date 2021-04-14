@@ -77,14 +77,14 @@ fi
 if [[ -n $FRONTENDVERSION ]]
 then
   echo "Creating frontend deployment configuration<br>"
-  eval echo \"$(cat ../openshift-config/Frontend/deploymentConfig.yaml)\" | oc apply -f - 2>&1
+  eval echo "\"$(cat ../openshift-config/Frontend/deploymentConfig.yaml)\"" | oc apply -f - 2>&1
   if (( $? > 0 ))
   then
     echo "<br>FE deployment config failed<br>"
     exit 1
   fi
   echo "Creating frontend service configuration<br>"
-  eval echo \"$(cat ../openshift-config/Frontend/service.yaml)\" | oc apply -f -  2>&1
+  eval echo "\"$(cat ../openshift-config/Frontend/service.yaml)\"" | oc apply -f -  2>&1
   oc patch dc/frontend --patch '{"spec":{"template":{"spec":{"serviceAccountName": "useroot"}}}}'
   if (( $? > 0 ))
   then
@@ -92,7 +92,7 @@ then
     exit 2
   fi
   echo "Creating frontend route<br>"
-  eval echo \"$(cat ../openshift-config/Frontend/route.yaml)\" | oc apply -f - 2>&1
+  eval echo "\"$(cat ../openshift-config/Frontend/route.yaml)\"" | oc apply -f - 2>&1
   if (( $? > 0 ))
   then
     echo "<br>FE route config failed<br>"
